@@ -10,7 +10,7 @@ import {useState} from "react";
 import useAuthStore from "@/zustand/authStore";
 import {useMutation} from "@tanstack/react-query";
 import ManageUsers from "./ManageUsers";
-import ManageOrders from "./MnageOrders";
+import ManageOrders from "./ManageOrders";
 
 export default function Profile() {
     const {id: userId} = useParams();
