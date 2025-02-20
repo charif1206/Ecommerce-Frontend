@@ -1,11 +1,18 @@
 import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
+    Dialog,
+    DialogContent,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
 } from "@/components/ui/dialog";
-import { useEffect, useState } from "react";
+import {useEffect, useState} from "react";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 
 function EditProductModal({product, onClose, onUpdate}) {
     const [formData, setFormData] = useState({
@@ -86,24 +93,46 @@ function EditProductModal({product, onClose, onUpdate}) {
                 return (
                     <>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">RAM</label>
-                            <input
-                                name="ram"
+                            <label className="block text-sm font-medium mb-1 text-gray-700">
+                                RAM
+                            </label>
+                            <Select
                                 value={formData.ram}
-                                onChange={handleChange}
-                                className="mt-1 block w-full border rounded-md px-3 py-2"
-                            />
+                                onValueChange={(value) =>
+                                    setFormData((prev) => ({...prev, ram: value}))
+                                }
+                            >
+                                <SelectTrigger className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-black focus:border-black">
+                                    <SelectValue placeholder="Select RAM" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="4GB">4GB</SelectItem>
+                                    <SelectItem value="6GB">6GB</SelectItem>
+                                    <SelectItem value="8GB">8GB</SelectItem>
+                                    <SelectItem value="12GB">12GB</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">
+                            <label className="block text-sm font-medium mb-1 text-gray-700">
                                 Storage
                             </label>
-                            <input
-                                name="storage"
+                            <Select
                                 value={formData.storage}
-                                onChange={handleChange}
-                                className="mt-1 block w-full border rounded-md px-3 py-2"
-                            />
+                                onValueChange={(value) =>
+                                    setFormData((prev) => ({...prev, storage: value}))
+                                }
+                            >
+                                <SelectTrigger className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-black focus:border-black">
+                                    <SelectValue placeholder="Select Storage" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="64GB">64GB</SelectItem>
+                                    <SelectItem value="128GB">128GB</SelectItem>
+                                    <SelectItem value="256GB">256GB</SelectItem>
+                                    <SelectItem value="512GB">512GB</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
                     </>
                 );
@@ -111,27 +140,35 @@ function EditProductModal({product, onClose, onUpdate}) {
                 return (
                     <>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">
+                            <label className="block text-sm font-medium mb-1 text-gray-700">
                                 Battery Life
                             </label>
                             <input
                                 name="batteryLife"
                                 value={formData.batteryLife}
                                 onChange={handleChange}
-                                className="mt-1 block w-full border rounded-md px-3 py-2"
+                                onBlur={() => {
+                                    setFormData((prev) => {
+                                        let bl = prev.batteryLife;
+                                        if (bl && !bl.trim().endsWith("h")) {
+                                            return {...prev, batteryLife: bl.trim() + "h"};
+                                        }
+                                        return prev;
+                                    });
+                                }}
+                                placeholder="e.g., 18h"
+                                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-black focus:border-black"
                             />
                         </div>
-                        <label className="flex items-center space-x-2 cursor-pointer">
+                        <label className="flex items-center space-x-3 cursor-pointer">
                             <input
                                 name="noiseCancellation"
                                 type="checkbox"
                                 checked={formData.noiseCancellation}
                                 onChange={handleChange}
-                                className="h-5 w-5"
+                                className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black"
                             />
-                            <span className="text-sm font-medium text-gray-700">
-                                Noise Cancellation
-                            </span>
+                            <span className="text-sm text-gray-700">Noise Cancellation</span>
                         </label>
                     </>
                 );
@@ -139,27 +176,35 @@ function EditProductModal({product, onClose, onUpdate}) {
                 return (
                     <>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">
+                            <label className="block text-sm font-medium mb-1 text-gray-700">
                                 Screen Type
                             </label>
-                            <input
-                                name="screenType"
+                            <Select
                                 value={formData.screenType}
-                                onChange={handleChange}
-                                className="mt-1 block w-full border rounded-md px-3 py-2"
-                            />
+                                onValueChange={(value) =>
+                                    setFormData((prev) => ({...prev, screenType: value}))
+                                }
+                            >
+                                <SelectTrigger className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-black focus:border-black">
+                                    <SelectValue placeholder="Select Screen Type" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="AMOLED">AMOLED</SelectItem>
+                                    <SelectItem value="LCD">LCD</SelectItem>
+                                    <SelectItem value="LED">LED</SelectItem>
+                                    <SelectItem value="Retina">Retina</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
-                        <label className="flex items-center space-x-2 cursor-pointer">
+                        <label className="flex items-center space-x-3 cursor-pointer">
                             <input
                                 name="waterResistant"
                                 type="checkbox"
                                 checked={formData.waterResistant}
                                 onChange={handleChange}
-                                className="h-5 w-5"
+                                className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black"
                             />
-                            <span className="text-sm font-medium text-gray-700">
-                                Water Resistant
-                            </span>
+                            <span className="text-sm text-gray-700">Water Resistant</span>
                         </label>
                     </>
                 );
@@ -175,76 +220,100 @@ function EditProductModal({product, onClose, onUpdate}) {
                 if (!open) onClose();
             }}
         >
-            <DialogContent className="max-w-lg" autoFocus={false}>
+            <DialogContent className="max-w-xl" autoFocus={false}>
                 <DialogHeader>
-                    <DialogTitle>Edit Product - {product.name}</DialogTitle>
+                    <DialogTitle className="text-lg font-semibold">
+                        Edit Product - {product.name}
+                    </DialogTitle>
                 </DialogHeader>
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-6">
                     {/* Main product fields */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Name</label>
-                        <input
-                            name="name"
-                            value={formData.name}
-                            onChange={handleChange}
-                            className="mt-1 block w-full border rounded-md px-3 py-2"
-                            required
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Brand</label>
-                        <input
-                            name="brand"
-                            value={formData.brand}
-                            onChange={handleChange}
-                            className="mt-1 block w-full border rounded-md px-3 py-2"
-                            required
-                        />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium mb-1 text-gray-700">
+                                    Name <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    name="name"
+                                    value={formData.name}
+                                    onChange={handleChange}
+                                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-black focus:border-black"
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-1 text-gray-700">
+                                    Brand <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    name="brand"
+                                    value={formData.brand}
+                                    onChange={handleChange}
+                                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-black focus:border-black"
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium mb-1 text-gray-700">
+                                    Price ($) <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    name="price"
+                                    type="number"
+                                    value={formData.price}
+                                    onChange={handleChange}
+                                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-black focus:border-black"
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-1 text-gray-700">
+                                    Stock <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    name="stock"
+                                    type="number"
+                                    value={formData.stock}
+                                    onChange={handleChange}
+                                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-black focus:border-black"
+                                    required
+                                />
+                            </div>
+                        </div>
+
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Price</label>
-                            <input
-                                name="price"
-                                type="number"
-                                value={formData.price}
+                            <label className="block text-sm font-medium mb-1 text-gray-700">
+                                Description <span className="text-red-500">*</span>
+                            </label>
+                            <textarea
+                                name="description"
+                                value={formData.description}
                                 onChange={handleChange}
-                                className="mt-1 block w-full border rounded-md px-3 py-2"
+                                rows={3}
+                                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-black focus:border-black"
                                 required
                             />
                         </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">Stock</label>
-                            <input
-                                name="stock"
-                                type="number"
-                                value={formData.stock}
-                                onChange={handleChange}
-                                className="mt-1 block w-full border rounded-md px-3 py-2"
-                                required
-                            />
-                        </div>
                     </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">
-                            Description
-                        </label>
-                        <textarea
-                            name="description"
-                            value={formData.description}
-                            onChange={handleChange}
-                            className="mt-1 block w-full border rounded-md px-3 py-2"
-                            required
-                        />
-                    </div>
+
                     {/* Variant fields */}
-                    {getVariantFields()}
+                    <div className="space-y-4 bg-gray-50 p-4 rounded-lg border">
+                        <h3 className="text-sm font-semibold text-gray-900 mb-2">
+                            {product.category} Specifications
+                        </h3>
+                        <div className="space-y-4">{getVariantFields()}</div>
+                    </div>
+
                     <DialogFooter>
                         <button
                             type="submit"
-                            className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+                            className="px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white rounded-lg transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
                         >
-                            Save
+                            Save Changes
                         </button>
                     </DialogFooter>
                 </form>

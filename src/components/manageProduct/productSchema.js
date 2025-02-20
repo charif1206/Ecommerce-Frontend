@@ -10,7 +10,7 @@ const baseSchema = z.object({
     productImages: z
         .array(z.instanceof(File))
         .max(4, "You can only upload up to 4 images")
-        .optional(),
+        .min(1, "At least one image is required"),
 });
 
 // Schema for Phones: Both RAM and Storage are required.
