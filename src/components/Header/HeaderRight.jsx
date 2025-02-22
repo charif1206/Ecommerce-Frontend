@@ -8,6 +8,7 @@ import {Link} from "react-router-dom";
 import {useMutation, useQueryClient} from "@tanstack/react-query";
 import {useNavigate} from "react-router-dom";
 import axiosInstance from "@/Axios/AxiosInstance";
+import {RiCoinsFill} from "react-icons/ri";
 
 export default function HeaderRight() {
     const user = useAuthStore((state) => state.user);
@@ -18,7 +19,7 @@ export default function HeaderRight() {
     const queryClient = useQueryClient();
     const navigate = useNavigate();
 
-    // Logout Mutation with proper typing
+    // Logout Mutation
     const {mutate: logout} = useMutation({
         mutationFn: () =>
             axiosInstance.post("/auth/logout", null, {
@@ -48,16 +49,48 @@ export default function HeaderRight() {
 
     return (
         <div className="flex items-center gap-6">
-            {/* Navigation Icons */}
-            <Link to={`/profile/${user?._id}`} className="hidden md:block">
-                <NavItem icon={<CgProfile />} title="Profile" />
-            </Link>
+            {/* Profile Link with Image and Name */}
+            {user && (
+                <Link to={`/profile/${user._id}`} className="hidden md:flex items-center gap-2">
+                    <div className="relative">
+                        {user.profilePicture ? (
+                            <img
+                                src={user.profilePicture.url}
+                                alt="Profile"
+                                className="h-8 w-8 rounded-full object-cover"
+                            />
+                        ) : (
+                            <div className="h-10 w-10 bg-gray-100 rounded-full flex items-center justify-center text-xl">
+                                <CgProfile />
+                            </div>
+                        )}
+                    </div>
+                    <p className="capitalize text-gray-700 hover:text-black transition-colors">
+                        {user.name || "Profile"}
+                    </p>
+                </Link>
+            )}
+
+            {/* Cart Link */}
             <Link to="/cart" className="hidden md:block">
                 <NavItem icon={<MdAddShoppingCart />} title="Cart" count={cartCount} />
             </Link>
+
+            {/* Shop Link */}
             <Link to="/shop" className="hidden md:block">
                 <NavItem icon={<CiShoppingCart />} title="Shop" />
             </Link>
+
+            {/* Coins Display - Clickable to Profile with coupons tab */}
+            {user && (
+                <Link
+                    to={`/profile/${user._id}?tab=coupons`}
+                    className="hidden md:flex items-center gap-2 cursor-pointer"
+                >
+                    <RiCoinsFill className="h-6 w-6 text-yellow-500" />
+                    <span className="font-semibold text-gray-700">{user.coins}</span>
+                </Link>
+            )}
 
             {/* Auth Buttons */}
             {!user ? (

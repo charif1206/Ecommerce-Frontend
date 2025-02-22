@@ -1,7 +1,7 @@
 import axiosInstance from "@/Axios/AxiosInstance";
-import {Badge} from "@/components/ui/badge";
-import {Button} from "@/components/ui/button";
-import {Card, CardContent} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
     Dialog,
     DialogContent,
@@ -10,18 +10,16 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
-import {useMutation, useQueryClient} from "@tanstack/react-query";
-import {Copy} from "lucide-react";
-import {useState} from "react";
-import {toast} from "sonner";
+import useAuthStore from "@/zustand/authStore";
+import { useMutation } from "@tanstack/react-query";
+import { Copy } from "lucide-react";
+import { useState } from "react";
+import { useParams } from "react-router-dom";
+import { toast } from "sonner";
 
 export default function ProfileCoupons() {
-    const [couponDialog, setCouponDialog] = useState({
-        isOpen: false,
-        code: "",
-        value: 0,
-    });
-    const queryClient = useQueryClient();
+    const {id: userId} = useParams();
+    const setUser = useAuthStore((state) => state.setUser);
 
     // Points conversion rate (example: 1 coupon dollar = 100 points)
     const getPointsNeeded = (amount) => amount * 100;
@@ -34,10 +32,10 @@ export default function ProfileCoupons() {
     ];
 
     const minimumPurchaseMap = {
-        5: 25, 
-        10: 50, 
-        20: 100, 
-        50: 250, 
+        5: 25,
+        10: 50,
+        20: 100,
+        50: 250,
     };
 
     // React Query mutation for redeeming coupons
@@ -46,25 +44,35 @@ export default function ProfileCoupons() {
             const response = await axiosInstance.post("/coupons/redeem", {value: amount});
             return response.data;
         },
-        onSuccess: (data) => {
-            console.log(data);
-
+        onSuccess: async (data) => {
             const {code, value} = data;
-            console.log(code, value);
-
             setCouponDialog({
                 isOpen: true,
                 code,
                 value,
             });
 
-            // Invalidate relevant queries to refresh user data
-            queryClient.invalidateQueries(["userData"]);
-            queryClient.invalidateQueries(["userPoints"]);
+            // Refetch updated user data and update store & localStorage
+            const userResponse = await axiosInstance.get(`/users/${userId}`);
+            setUser(userResponse.data);
+            console.log("User data:", userResponse.data);
+
+            localStorage.setItem("userInfo", JSON.stringify(userResponse.data));
         },
         onError: (error) => {
             toast.error(error.response?.data?.message || "Not enough points to redeem this coupon");
         },
+    });
+
+    const [couponDialog, setCouponDialog] = useState({
+        isOpen: false,
+        code: "",
+        value: 0,
+    });
+
+    const [confirmDialog, setConfirmDialog] = useState({
+        isOpen: false,
+        amount: 0,
     });
 
     const handleBuy = (amount) => {
@@ -132,7 +140,9 @@ export default function ProfileCoupons() {
                                 </div>
                                 <div className="px-4 pb-4 flex justify-end">
                                     <Button
-                                        onClick={() => handleBuy(coupon.amount)}
+                                        onClick={() =>
+                                            setConfirmDialog({isOpen: true, amount: coupon.amount})
+                                        }
                                         className="bg-black hover:bg-gray-800 text-sm py-1 h-8"
                                         disabled={redeemCouponMutation.isPending}
                                     >
@@ -146,6 +156,39 @@ export default function ProfileCoupons() {
                     ))}
                 </div>
             </div>
+
+            {/* Confirmation Dialog */}
+            <Dialog
+                open={confirmDialog.isOpen}
+                onOpenChange={(open) => !open && setConfirmDialog({isOpen: false, amount: 0})}
+            >
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Confirm Purchase</DialogTitle>
+                        <DialogDescription>
+                            Are you sure you want to redeem points for a ${confirmDialog.amount}{" "}
+                            discount coupon?
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="sm:justify-between">
+                        <Button
+                            variant="outline"
+                            onClick={() => setConfirmDialog({isOpen: false, amount: 0})}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={() => {
+                                handleBuy(confirmDialog.amount);
+                                setConfirmDialog({isOpen: false, amount: 0});
+                            }}
+                            className="bg-black hover:bg-gray-800"
+                        >
+                            Confirm
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
             {/* Coupon Code Dialog */}
             <Dialog

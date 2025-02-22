@@ -1,11 +1,14 @@
+import {useEffect} from "react";
+import {useQueryClient} from "@tanstack/react-query";
 import axiosInstance from "@/Axios/AxiosInstance";
 import useAuthStore from "@/zustand/authStore";
 import {Avatar, AvatarFallback, AvatarImage} from "@radix-ui/react-avatar";
-import {useQuery} from "@tanstack/react-query";
+import {useMutation, useQuery} from "@tanstack/react-query";
 import {DollarSign, Package, ShoppingCart, Users} from "lucide-react";
-// import {useState} from "react";
 import {useParams} from "react-router-dom";
-import {motion} from "framer-motion"; // For animations
+import {motion} from "framer-motion";
+import {Button} from "@/components/ui/button";
+import {toast} from "sonner";
 import {
     LineChart,
     Line,
@@ -18,9 +21,11 @@ import {
 } from "recharts";
 
 export default function ProfileInformation() {
-    // const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const authUser = useAuthStore((state) => state.user);
     const {id: userId} = useParams();
+    const queryClient = useQueryClient();
+    console.log(authUser);
+    
 
     // Query for user profile
     const {data: user} = useQuery({
@@ -32,17 +37,37 @@ export default function ProfileInformation() {
         enabled: !!userId,
     });
 
-    // Only fetch analytics if the logged-in user is viewing their own profile
-    // and their role is either "admin" or "seller".
+    // Seller upgrade mutation
+    const {mutate: initiateUpgrade, isPending: isUpgrading} = useMutation({
+        mutationFn: async () => {
+            const response = await axiosInstance.post("/payments/create-seller-upgrade");
+            return response.data;
+        },
+        onSuccess: (data) => {
+            window.location.href = data.url;
+        },
+        onError: (error) => {
+            toast.error(
+                `Upgrade Failed: ${error.response?.data?.error || "Failed to initiate upgrade"}`
+            );
+        },
+    });
+
+    // Analytics authorization check
     const isAuthorized =
         authUser &&
         userId &&
         authUser._id === userId &&
         (authUser.roles === "admin" || authUser.roles === "seller");
 
-    console.log("isAuthorized", isAuthorized);
+    // When authUser changes to an authorized role, refetch analytics.
+    useEffect(() => {
+        if (authUser && (authUser.roles === "seller" || authUser.roles === "admin")) {
+            queryClient.invalidateQueries(["analytics", userId]);
+        }
+    }, [authUser, queryClient, userId]);
 
-    // Query for analytics (only runs if authorized)
+    // Analytics query
     const {data: analyticsResponse} = useQuery({
         queryKey: ["analytics", userId],
         queryFn: async () => {
@@ -50,10 +75,10 @@ export default function ProfileInformation() {
             return response.data;
         },
         enabled: isAuthorized,
-        staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+        staleTime: 5 * 60 * 1000,
     });
 
-    // Use default values if analytics data is missing
+    // Derived values
     const analyticsData = analyticsResponse?.analyticsData || {
         users: 0,
         products: 0,
@@ -61,39 +86,24 @@ export default function ProfileInformation() {
         totalRevenue: 0,
     };
     const dailySalesData = analyticsResponse?.dailySalesData || [];
-
-    // Local state for editing profile info (for the modal)
-    // const [userInfo, setUserInfo] = useState({
-    //     fullName: "Youssef Ait",
-    //     role: "Seller",
-    //     phone: "0699999999",
-    //     email: "test009@gmail.com",
-    // });
-
-    // Derived profile values
     const userName = user?.username || "Unknown";
     const userProfilePicture = user?.profilePicture?.url || "";
     const userEmail = user?.email || "";
     const userPhone = user?.phone || "/";
 
-    // Handle Edit Profile form submission
-    // const handleSubmit = (e) => {
-    //     e.preventDefault();
-    //     setIsEditModalOpen(false);
-    //     // Handle form submission logic here
-    // };
-
     return (
         <div>
-            {/* Main Content */}
             <div className="space-y-6">
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-2xl font-semibold">Profile</h1>
-                    {/* Show Upgrade button only if the auth user is not already a seller */}
                     {authUser.roles === "customer" && authUser?._id === userId && (
-                        <button className="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors">
-                            Upgrade to Seller
-                        </button>
+                        <Button
+                            onClick={() => initiateUpgrade()}
+                            disabled={isUpgrading}
+                            className="gap-2"
+                        >
+                            {isUpgrading ? "Processing..." : "Upgrade to Seller"}
+                        </Button>
                     )}
                 </div>
 
@@ -102,7 +112,6 @@ export default function ProfileInformation() {
                     <div className="bg-white rounded-2xl p-8 shadow-md">
                         {/* Profile Header */}
                         <div className="flex flex-col md:flex-row items-center md:space-x-6 border-b border-gray-200 pb-6 mb-6">
-                            {/* Avatar */}
                             <Avatar className="h-16 w-16 rounded-full border-2 border-gray-300">
                                 <AvatarImage
                                     src={userProfilePicture}
@@ -114,7 +123,6 @@ export default function ProfileInformation() {
                                 </AvatarFallback>
                             </Avatar>
 
-                            {/* User Info */}
                             <div className="mt-4 md:mt-0 text-center md:text-left">
                                 <h2 className="text-2xl font-semibold text-gray-900">{userName}</h2>
                                 <p className="text-sm text-gray-500 capitalize">
@@ -123,17 +131,14 @@ export default function ProfileInformation() {
                             </div>
                         </div>
 
-                        {/* Personal Information Section */}
+                        {/* Personal Information */}
                         <div>
                             <div className="flex justify-between items-center mb-4">
                                 <h2 className="text-xl font-semibold text-gray-900">
                                     Personal Information
                                 </h2>
                                 {authUser._id === userId && (
-                                    <button
-                                        // onClick={() => setIsEditModalOpen(true)}
-                                        className="text-gray-500 hover:text-gray-700"
-                                    >
+                                    <button className="text-gray-500 hover:text-gray-700">
                                         Edit
                                     </button>
                                 )}
@@ -154,7 +159,7 @@ export default function ProfileInformation() {
                 </div>
             </div>
 
-            {/* Analytics Cards and Rechart */}
+            {/* Analytics Section */}
             {isAuthorized && (
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -189,6 +194,7 @@ export default function ProfileInformation() {
                             </>
                         )}
                     </div>
+
                     <motion.div
                         className="hidden md:block bg-white rounded-lg p-6 shadow-lg"
                         initial={{opacity: 0, y: 20}}
@@ -247,93 +253,3 @@ const AnalyticsCard = ({title, value, icon: Icon, color}) => (
         </div>
     </motion.div>
 );
-
-// {isEditModalOpen && (
-//   <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
-//       <div className="bg-white rounded-lg w-full max-w-md p-6">
-//           <div className="flex justify-between items-center mb-6">
-//               <h2 className="text-xl font-semibold">Edit Profile</h2>
-//               <button
-//                   onClick={() => setIsEditModalOpen(false)}
-//                   className="text-gray-500 hover:text-gray-700 text-2xl"
-//               >
-//                   ×
-//               </button>
-//           </div>
-
-//           <form onSubmit={handleSubmit} className="space-y-4">
-//               <div>
-//                   <label className="block text-sm font-medium text-gray-700 mb-1">
-//                       Full Name
-//                   </label>
-//                   <input
-//                       type="text"
-//                       value={userName}
-//                       onChange={(e) =>
-//                           setUserInfo({...userInfo, fullName: e.target.value})
-//                       }
-//                       className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-200"
-//                   />
-//               </div>
-
-//               <div>
-//                   <label className="block text-sm font-medium text-gray-700 mb-1">
-//                       Role
-//                   </label>
-//                   <input
-//                       type="text"
-//                       value={user?.roles}
-//                       onChange={(e) =>
-//                           setUserInfo({...userInfo, role: e.target.value})
-//                       }
-//                       className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-200"
-//                   />
-//               </div>
-
-//               <div>
-//                   <label className="block text-sm font-medium text-gray-700 mb-1">
-//                       Phone Number
-//                   </label>
-//                   <input
-//                       type="tel"
-//                       value={userPhone}
-//                       onChange={(e) =>
-//                           setUserInfo({...userInfo, phone: e.target.value})
-//                       }
-//                       className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-200"
-//                   />
-//               </div>
-
-//               <div>
-//                   <label className="block text-sm font-medium text-gray-700 mb-1">
-//                       Email
-//                   </label>
-//                   <input
-//                       type="email"
-//                       value={userEmail}
-//                       onChange={(e) =>
-//                           setUserInfo({...userInfo, email: e.target.value})
-//                       }
-//                       className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-200"
-//                   />
-//               </div>
-
-//               <div className="flex justify-end space-x-4 pt-4">
-//                   <button
-//                       type="button"
-//                       onClick={() => setIsEditModalOpen(false)}
-//                       className="px-4 py-2 border rounded-lg hover:bg-gray-50"
-//                   >
-//                       Cancel
-//                   </button>
-//                   <button
-//                       type="submit"
-//                       className="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800"
-//                   >
-//                       Save Changes
-//                   </button>
-//               </div>
-//           </form>
-//       </div>
-//   </div>
-// )}

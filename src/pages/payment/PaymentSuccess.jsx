@@ -1,6 +1,5 @@
-import React from "react";
-import { Link } from "react-router-dom";
 import loginIllustration from "@/assets/Devices-bro.png";
+import { Link } from "react-router-dom";
 export default function PaymentSuccess() {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -39,7 +38,7 @@ export default function PaymentSuccess() {
             </div>
             <div className="border-t pt-3 mt-3">
               <p className="text-sm text-gray-600">
-                We've sent a confirmation email to your registered email
+                We have sent a confirmation email to your registered email
                 address.
               </p>
             </div>

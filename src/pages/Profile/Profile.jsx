@@ -1,20 +1,21 @@
 import axiosInstance from "@/Axios/AxiosInstance";
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {Button} from "@/components/ui/button";
+import {ScrollArea} from "@/components/ui/scroll-area";
+import {Sheet, SheetContent, SheetTrigger} from "@/components/ui/sheet";
+import {Skeleton} from "@/components/ui/skeleton";
+import {Tabs, TabsList, TabsTrigger} from "@/components/ui/tabs";
 import useAuthStore from "@/zustand/authStore";
-import { useMutation } from "@tanstack/react-query";
-import { useState } from "react";
-import { FaBars } from "react-icons/fa";
-import { useParams } from "react-router-dom";
+import {useMutation} from "@tanstack/react-query";
+import {useState} from "react";
+import {FaBars} from "react-icons/fa";
+import {useParams, useSearchParams} from "react-router-dom";
 import ManageOrders from "./ManageOrders";
 import ManageProduct from "./ManageProduct";
 import ManageUsers from "./ManageUsers";
 import ProfileInformation from "./ProfileInformation";
 import ProfileLikes from "./ProfileLikes";
 import ProfileWishlist from "./ProfileWishlist";
+import ProfileCoupons from "./ProfileCoupons";
 
 // Import AlertDialog components
 import {
@@ -27,14 +28,16 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import ProfileCoupons from "./ProfileCoupons";
 
 export default function Profile() {
     const {id: userId} = useParams();
+    const [searchParams] = useSearchParams();
+    // Set default tab from query parameter or fallback to "profile"
+    const defaultTab = searchParams.get("tab") || "profile";
+    const [activeTab, setActiveTab] = useState(defaultTab);
     const user = useAuthStore((state) => state.user);
     const logout = useAuthStore((state) => state.logout);
 
-    const [activeTab, setActiveTab] = useState("profile");
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     // State to control the deletion alert dialog
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -186,7 +189,7 @@ export default function Profile() {
                 </div>
 
                 {/* Main Content */}
-                <main className="flex-1 ">
+                <main className="flex-1">
                     <div className="min-h-[calc(100vh-8rem)] p-4 lg:p-6">
                         {activeTab === "profile" && <ProfileInformation />}
                         {activeTab === "coupons" && <ProfileCoupons />}

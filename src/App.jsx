@@ -1,4 +1,4 @@
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import {BrowserRouter, Navigate, Route, Routes} from "react-router-dom";
 import Footer from "./components/Footer/Footer";
 import Header from "./components/Header/Header";
 import AdminDashboard from "./pages/Admin/AdminDachbord";
@@ -11,11 +11,12 @@ import VerifyEmail from "./pages/auth/VerifyEmail";
 import Home from "./pages/home/home";
 import CartPage from "./pages/payment/CartPage";
 import CheckOutPage from "./pages/payment/CheckOutPage";
-import PurchaseSuccessPage from "./pages/payment/PurchaseSuccessPage";
+import OrderSuccessPage from "./pages/payment/OrderSuccessPage";
 import ProductDetails from "./pages/productdetails/ProductDetails";
 import Profile from "./pages/Profile/Profile";
 import Shop from "./pages/shop/Shop";
 import useAuthStore from "./zustand/authStore";
+import SellerUpgradeSuccessPage from "./pages/payment/SellerUpgradeSuccessPage";
 
 function App() {
     const user = useAuthStore((state) => state.user); // Access user from Zustand store
@@ -36,15 +37,22 @@ function App() {
                 <Route path="/users/:userId/verify/:token" element={<VerifyEmail />} />
 
                 {/* Protected Routes - Only accessible if user is authenticated */}
-                <Route path="/profile/:id" element={user ? <Profile /> : <Navigate to="/login" />} />
+                <Route
+                    path="/profile/:id"
+                    element={user ? <Profile /> : <Navigate to="/login" />}
+                />
                 <Route
                     path="/checkout"
                     element={user ? <CheckOutPage /> : <Navigate to="/login" />}
                 />
                 <Route path="/cart" element={user ? <CartPage /> : <Navigate to="/login" />} />
                 <Route
-                    path="/checkout-success"
-                    element={user ? <PurchaseSuccessPage /> : <Navigate to="/login" />}
+                    path="/order-success"
+                    element={user ? <OrderSuccessPage /> : <Navigate to="/login" />}
+                />
+                <Route
+                    path="/seller-upgrade-success"
+                    element={user ? <SellerUpgradeSuccessPage /> : <Navigate to="/login" />}
                 />
 
                 {/* Admin Route */}
