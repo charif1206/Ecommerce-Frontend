@@ -1,4 +1,4 @@
-import loginIllustration from "@/assets/Devices-bro.png"; // Replace with your image path
+import loginIllustration from "@/assets/Devices-bro.png";
 import {zodResolver} from "@hookform/resolvers/zod";
 import {useForm} from "react-hook-form";
 import {FcGoogle} from "react-icons/fc";
@@ -8,7 +8,7 @@ import {z} from "zod";
 import axiosInstance from "@/Axios/AxiosInstance";
 import useAuthStore from "@/zustand/authStore";
 import {useMutation} from "@tanstack/react-query";
-import {toast} from "sonner"; // Import Sonner for toast notifications
+import {toast} from "sonner";
 import useCartStore from "@/zustand/cartStore";
 
 // Zod validation schema for the form
@@ -78,7 +78,7 @@ export default function Login() {
     });
 
     const onSubmit = (data) => {
-        login(data); // Trigger the login mutation when the form is submitted
+        login(data); 
     };
 
     return (

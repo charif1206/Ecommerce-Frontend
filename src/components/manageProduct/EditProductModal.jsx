@@ -1,3 +1,7 @@
+import {useForm} from "react-hook-form";
+import {zodResolver} from "@hookform/resolvers/zod";
+import * as z from "zod";
+import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui/form";
 import {
     Dialog,
     DialogContent,
@@ -5,7 +9,8 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
-import {useEffect, useState} from "react";
+import {Input} from "@/components/ui/input";
+import {Textarea} from "@/components/ui/textarea";
 import {
     Select,
     SelectContent,
@@ -13,310 +18,360 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import {Checkbox} from "@/components/ui/checkbox";
+import {useEffect} from "react";
+import {Button} from "@/components/ui/button";
 
 function EditProductModal({product, onClose, onUpdate}) {
-    const [formData, setFormData] = useState({
-        name: "",
-        brand: "",
-        price: "",
-        stock: "",
-        description: "",
-        ram: "",
-        storage: "",
-        batteryLife: "",
-        noiseCancellation: false,
-        screenType: "",
-        waterResistant: false,
+    const baseSchema = z.object({
+        name: z.string().min(1, {message: "Required"}),
+        brand: z.string().min(1, {message: "Required"}),
+        price: z.coerce.number().positive({message: "Must be positive"}),
+        stock: z.coerce.number().min(0, {message: "Must be non-negative"}),
+        description: z.string().min(1, {message: "Required"}),
     });
 
-    // Sync form data with product prop
+    let variantSchema;
+    switch (product?.category) {
+        case "Phones":
+            variantSchema = z.object({
+                ram: z.string().min(1, {message: "Required"}),
+                storage: z.string().min(1, {message: "Required"}),
+            });
+            break;
+        case "Headphones":
+            variantSchema = z.object({
+                batteryLife: z.string().min(1, {message: "Required"}),
+                noiseCancellation: z.boolean(),
+            });
+            break;
+        case "Smartwatches":
+            variantSchema = z.object({
+                screenType: z.string().min(1, {message: "Required"}),
+                waterResistant: z.boolean(),
+            });
+            break;
+        default:
+            variantSchema = z.object({});
+    }
+
+    const formSchema = baseSchema.merge(variantSchema);
+
+    const form = useForm({
+        resolver: zodResolver(formSchema),
+        defaultValues: {
+            name: "",
+            brand: "",
+            price: 0,
+            stock: 0,
+            description: "",
+            ...(product?.variants || {}),
+        },
+    });
+
     useEffect(() => {
-        if (!product) return;
-        setFormData({
-            name: product.name || "",
-            brand: product.brand || "",
-            price: product.price || "",
-            stock: product.stock || "",
-            description: product.description || "",
-            ram: product.variants?.ram || "",
-            storage: product.variants?.storage || "",
-            batteryLife: product.variants?.batteryLife || "",
-            noiseCancellation: product.variants?.noiseCancellation || false,
-            screenType: product.variants?.screenType || "",
-            waterResistant: product.variants?.waterResistant || false,
-        });
-    }, [product]);
+        if (product) {
+            form.reset({
+                name: product.name,
+                brand: product.brand,
+                price: product.price,
+                stock: product.stock,
+                description: product.description,
+                ...product.variants,
+            });
+        }
+    }, [product, form]);
 
-    const handleChange = (e) => {
-        const {name, value, type, checked} = e.target;
-        setFormData((prev) => ({
-            ...prev,
-            [name]: type === "checkbox" ? checked : value,
-        }));
-    };
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
+    const onSubmit = (data) => {
         const updatedData = {
-            name: formData.name,
-            brand: formData.brand,
-            price: formData.price,
-            stock: formData.stock,
-            description: formData.description,
+            name: data.name,
+            brand: data.brand,
+            price: data.price,
+            stock: data.stock,
+            description: data.description,
             variants: {},
         };
 
-        // Add variants based on category
-        if (product.category === "Phones") {
-            updatedData.variants = {
-                ram: formData.ram,
-                storage: formData.storage,
-            };
-        } else if (product.category === "Headphones") {
-            updatedData.variants = {
-                batteryLife: formData.batteryLife,
-                noiseCancellation: formData.noiseCancellation,
-            };
-        } else if (product.category === "Smartwatches") {
-            updatedData.variants = {
-                screenType: formData.screenType,
-                waterResistant: formData.waterResistant,
-            };
+        switch (product.category) {
+            case "Phones":
+                updatedData.variants = {
+                    ram: data.ram,
+                    storage: data.storage,
+                };
+                break;
+            case "Headphones":
+                updatedData.variants = {
+                    batteryLife: data.batteryLife,
+                    noiseCancellation: data.noiseCancellation,
+                };
+                break;
+            case "Smartwatches":
+                updatedData.variants = {
+                    screenType: data.screenType,
+                    waterResistant: data.waterResistant,
+                };
+                break;
         }
 
         onUpdate(product._id, updatedData);
-    };
-
-    const getVariantFields = () => {
-        switch (product.category) {
-            case "Phones":
-                return (
-                    <>
-                        <div>
-                            <label className="block text-sm font-medium mb-1 text-gray-700">
-                                RAM
-                            </label>
-                            <Select
-                                value={formData.ram}
-                                onValueChange={(value) =>
-                                    setFormData((prev) => ({...prev, ram: value}))
-                                }
-                            >
-                                <SelectTrigger className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-black focus:border-black">
-                                    <SelectValue placeholder="Select RAM" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="4GB">4GB</SelectItem>
-                                    <SelectItem value="6GB">6GB</SelectItem>
-                                    <SelectItem value="8GB">8GB</SelectItem>
-                                    <SelectItem value="12GB">12GB</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium mb-1 text-gray-700">
-                                Storage
-                            </label>
-                            <Select
-                                value={formData.storage}
-                                onValueChange={(value) =>
-                                    setFormData((prev) => ({...prev, storage: value}))
-                                }
-                            >
-                                <SelectTrigger className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-black focus:border-black">
-                                    <SelectValue placeholder="Select Storage" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="64GB">64GB</SelectItem>
-                                    <SelectItem value="128GB">128GB</SelectItem>
-                                    <SelectItem value="256GB">256GB</SelectItem>
-                                    <SelectItem value="512GB">512GB</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </>
-                );
-            case "Headphones":
-                return (
-                    <>
-                        <div>
-                            <label className="block text-sm font-medium mb-1 text-gray-700">
-                                Battery Life
-                            </label>
-                            <input
-                                name="batteryLife"
-                                value={formData.batteryLife}
-                                onChange={handleChange}
-                                onBlur={() => {
-                                    setFormData((prev) => {
-                                        let bl = prev.batteryLife;
-                                        if (bl && !bl.trim().endsWith("h")) {
-                                            return {...prev, batteryLife: bl.trim() + "h"};
-                                        }
-                                        return prev;
-                                    });
-                                }}
-                                placeholder="e.g., 18h"
-                                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-black focus:border-black"
-                            />
-                        </div>
-                        <label className="flex items-center space-x-3 cursor-pointer">
-                            <input
-                                name="noiseCancellation"
-                                type="checkbox"
-                                checked={formData.noiseCancellation}
-                                onChange={handleChange}
-                                className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black"
-                            />
-                            <span className="text-sm text-gray-700">Noise Cancellation</span>
-                        </label>
-                    </>
-                );
-            case "Smartwatches":
-                return (
-                    <>
-                        <div>
-                            <label className="block text-sm font-medium mb-1 text-gray-700">
-                                Screen Type
-                            </label>
-                            <Select
-                                value={formData.screenType}
-                                onValueChange={(value) =>
-                                    setFormData((prev) => ({...prev, screenType: value}))
-                                }
-                            >
-                                <SelectTrigger className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-black focus:border-black">
-                                    <SelectValue placeholder="Select Screen Type" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="AMOLED">AMOLED</SelectItem>
-                                    <SelectItem value="LCD">LCD</SelectItem>
-                                    <SelectItem value="LED">LED</SelectItem>
-                                    <SelectItem value="Retina">Retina</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <label className="flex items-center space-x-3 cursor-pointer">
-                            <input
-                                name="waterResistant"
-                                type="checkbox"
-                                checked={formData.waterResistant}
-                                onChange={handleChange}
-                                className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black"
-                            />
-                            <span className="text-sm text-gray-700">Water Resistant</span>
-                        </label>
-                    </>
-                );
-            default:
-                return null;
-        }
+        onClose();
     };
 
     return (
-        <Dialog
-            open
-            onOpenChange={(open) => {
-                if (!open) onClose();
-            }}
-        >
-            <DialogContent className="max-w-xl" autoFocus={false}>
+        <Dialog open onOpenChange={onClose}>
+            <DialogContent className="max-w-xl">
                 <DialogHeader>
                     <DialogTitle className="text-lg font-semibold">
-                        Edit Product - {product.name}
+                        Edit Product - {product?.name}
                     </DialogTitle>
                 </DialogHeader>
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    {/* Main product fields */}
-                    <div className="space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium mb-1 text-gray-700">
-                                    Name <span className="text-red-500">*</span>
-                                </label>
-                                <input
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                        <div className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <FormField
+                                    control={form.control}
                                     name="name"
-                                    value={formData.name}
-                                    onChange={handleChange}
-                                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-black focus:border-black"
-                                    required
+                                    render={({field}) => (
+                                        <FormItem>
+                                            <FormLabel>Name</FormLabel>
+                                            <FormControl>
+                                                <Input {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
                                 />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium mb-1 text-gray-700">
-                                    Brand <span className="text-red-500">*</span>
-                                </label>
-                                <input
+                                <FormField
+                                    control={form.control}
                                     name="brand"
-                                    value={formData.brand}
-                                    onChange={handleChange}
-                                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-black focus:border-black"
-                                    required
+                                    render={({field}) => (
+                                        <FormItem>
+                                            <FormLabel>Brand</FormLabel>
+                                            <FormControl>
+                                                <Input {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
                                 />
                             </div>
-                        </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium mb-1 text-gray-700">
-                                    Price ($) <span className="text-red-500">*</span>
-                                </label>
-                                <input
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <FormField
+                                    control={form.control}
                                     name="price"
-                                    type="number"
-                                    value={formData.price}
-                                    onChange={handleChange}
-                                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-black focus:border-black"
-                                    required
+                                    render={({field}) => (
+                                        <FormItem>
+                                            <FormLabel>Price ($)</FormLabel>
+                                            <FormControl>
+                                                <Input type="number" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
                                 />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium mb-1 text-gray-700">
-                                    Stock <span className="text-red-500">*</span>
-                                </label>
-                                <input
+                                <FormField
+                                    control={form.control}
                                     name="stock"
-                                    type="number"
-                                    value={formData.stock}
-                                    onChange={handleChange}
-                                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-black focus:border-black"
-                                    required
+                                    render={({field}) => (
+                                        <FormItem>
+                                            <FormLabel>Stock</FormLabel>
+                                            <FormControl>
+                                                <Input type="number" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
                                 />
                             </div>
-                        </div>
 
-                        <div>
-                            <label className="block text-sm font-medium mb-1 text-gray-700">
-                                Description <span className="text-red-500">*</span>
-                            </label>
-                            <textarea
+                            <FormField
+                                control={form.control}
                                 name="description"
-                                value={formData.description}
-                                onChange={handleChange}
-                                rows={3}
-                                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-black focus:border-black"
-                                required
+                                render={({field}) => (
+                                    <FormItem>
+                                        <FormLabel>Description</FormLabel>
+                                        <FormControl>
+                                            <Textarea {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
                             />
                         </div>
-                    </div>
 
-                    {/* Variant fields */}
-                    <div className="space-y-4 bg-gray-50 p-4 rounded-lg border">
-                        <h3 className="text-sm font-semibold text-gray-900 mb-2">
-                            {product.category} Specifications
-                        </h3>
-                        <div className="space-y-4">{getVariantFields()}</div>
-                    </div>
+                        <div className="space-y-4 bg-gray-50 p-4 rounded-lg border">
+                            <h3 className="text-sm font-semibold text-gray-900 mb-2">
+                                {product?.category} Specifications
+                            </h3>
+                            <div className="space-y-4">
+                                {product?.category === "Phones" && (
+                                    <>
+                                        <FormField
+                                            control={form.control}
+                                            name="ram"
+                                            render={({field}) => (
+                                                <FormItem>
+                                                    <FormLabel>RAM</FormLabel>
+                                                    <Select
+                                                        onValueChange={field.onChange}
+                                                        value={field.value}
+                                                    >
+                                                        <FormControl>
+                                                            <SelectTrigger>
+                                                                <SelectValue placeholder="Select RAM" />
+                                                            </SelectTrigger>
+                                                        </FormControl>
+                                                        <SelectContent>
+                                                            <SelectItem value="4GB">4GB</SelectItem>
+                                                            <SelectItem value="6GB">6GB</SelectItem>
+                                                            <SelectItem value="8GB">8GB</SelectItem>
+                                                            <SelectItem value="12GB">
+                                                                12GB
+                                                            </SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name="storage"
+                                            render={({field}) => (
+                                                <FormItem>
+                                                    <FormLabel>Storage</FormLabel>
+                                                    <Select
+                                                        onValueChange={field.onChange}
+                                                        value={field.value}
+                                                    >
+                                                        <FormControl>
+                                                            <SelectTrigger>
+                                                                <SelectValue placeholder="Select Storage" />
+                                                            </SelectTrigger>
+                                                        </FormControl>
+                                                        <SelectContent>
+                                                            <SelectItem value="64GB">
+                                                                64GB
+                                                            </SelectItem>
+                                                            <SelectItem value="128GB">
+                                                                128GB
+                                                            </SelectItem>
+                                                            <SelectItem value="256GB">
+                                                                256GB
+                                                            </SelectItem>
+                                                            <SelectItem value="512GB">
+                                                                512GB
+                                                            </SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </>
+                                )}
 
-                    <DialogFooter>
-                        <button
-                            type="submit"
-                            className="px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white rounded-lg transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
-                        >
-                            Save Changes
-                        </button>
-                    </DialogFooter>
-                </form>
+                                {product?.category === "Headphones" && (
+                                    <>
+                                        <FormField
+                                            control={form.control}
+                                            name="batteryLife"
+                                            render={({field}) => (
+                                                <FormItem>
+                                                    <FormLabel>Battery Life</FormLabel>
+                                                    <FormControl>
+                                                        <Input
+                                                            {...field}
+                                                            onBlur={(e) => {
+                                                                const value = e.target.value;
+                                                                if (value && !value.endsWith("h")) {
+                                                                    field.onChange(value + "h");
+                                                                }
+                                                                field.onBlur();
+                                                            }}
+                                                        />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name="noiseCancellation"
+                                            render={({field}) => (
+                                                <FormItem className="flex flex-row items-start space-x-3 space-y-0 p-4">
+                                                    <FormControl>
+                                                        <Checkbox
+                                                            checked={field.value}
+                                                            onCheckedChange={field.onChange}
+                                                        />
+                                                    </FormControl>
+                                                    <FormLabel>Noise Cancellation</FormLabel>
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </>
+                                )}
+
+                                {product?.category === "Smartwatches" && (
+                                    <>
+                                        <FormField
+                                            control={form.control}
+                                            name="screenType"
+                                            render={({field}) => (
+                                                <FormItem>
+                                                    <FormLabel>Screen Type</FormLabel>
+                                                    <Select
+                                                        onValueChange={field.onChange}
+                                                        value={field.value}
+                                                    >
+                                                        <FormControl>
+                                                            <SelectTrigger>
+                                                                <SelectValue placeholder="Select Screen Type" />
+                                                            </SelectTrigger>
+                                                        </FormControl>
+                                                        <SelectContent>
+                                                            <SelectItem value="AMOLED">
+                                                                AMOLED
+                                                            </SelectItem>
+                                                            <SelectItem value="LCD">LCD</SelectItem>
+                                                            <SelectItem value="LED">LED</SelectItem>
+                                                            <SelectItem value="Retina">
+                                                                Retina
+                                                            </SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name="waterResistant"
+                                            render={({field}) => (
+                                                <FormItem className="flex flex-row items-start space-x-3 space-y-0 p-4">
+                                                    <FormControl>
+                                                        <Checkbox
+                                                            checked={field.value}
+                                                            onCheckedChange={field.onChange}
+                                                        />
+                                                    </FormControl>
+                                                    <FormLabel>Water Resistant</FormLabel>
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </>
+                                )}
+                            </div>
+                        </div>
+
+                        <DialogFooter>
+                            <Button type="submit">Save Changes</Button>
+                        </DialogFooter>
+                    </form>
+                </Form>
             </DialogContent>
         </Dialog>
     );
