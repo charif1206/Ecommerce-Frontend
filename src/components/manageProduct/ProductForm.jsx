@@ -11,8 +11,6 @@ import {Switch} from "@/components/ui/switch";
 import {Textarea} from "@/components/ui/textarea";
 import {Button} from "@/components/ui/button";
 
-
-
 export default function ProductForm({form, selectedCategory, onSubmit}) {
     return (
         <Form {...form}>

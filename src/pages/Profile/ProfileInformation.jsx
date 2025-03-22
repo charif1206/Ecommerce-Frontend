@@ -1,9 +1,8 @@
-import {useEffect} from "react";
-import {useQueryClient} from "@tanstack/react-query";
+import {useEffect, useState} from "react";
+import {useQueryClient, useMutation, useQuery} from "@tanstack/react-query";
 import axiosInstance from "@/Axios/AxiosInstance";
 import useAuthStore from "@/zustand/authStore";
 import {Avatar, AvatarFallback, AvatarImage} from "@radix-ui/react-avatar";
-import {useMutation, useQuery} from "@tanstack/react-query";
 import {DollarSign, Package, ShoppingCart, Users} from "lucide-react";
 import {useParams} from "react-router-dom";
 import {motion} from "framer-motion";
@@ -19,13 +18,21 @@ import {
     Legend,
     ResponsiveContainer,
 } from "recharts";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
+import {Label} from "@/components/ui/label";
+import {Input} from "@/components/ui/input";
 
 export default function ProfileInformation() {
     const authUser = useAuthStore((state) => state.user);
     const {id: userId} = useParams();
     const queryClient = useQueryClient();
-    console.log(authUser);
-    
+    const setUser = useAuthStore((state) => state.setUser);
 
     // Query for user profile
     const {data: user} = useQuery({
@@ -35,6 +42,33 @@ export default function ProfileInformation() {
             return response.data;
         },
         enabled: !!userId,
+    });
+
+    const {mutate: uploadProfilePicture, isPending: isUploading} = useMutation({
+        mutationFn: async (file) => {
+            const formData = new FormData();
+            formData.append("profilePicture", file);
+            const response = await axiosInstance.post(
+                `/users/${userId}/profile/upload-profile-picture`,
+                formData
+            );
+            return response.data;
+        },
+        onSuccess: async () => {
+            toast.success("Profile picture updated successfully");
+            queryClient.invalidateQueries(["users", "profile", userId]);
+
+            const userResponse = await axiosInstance.get(`/users/${userId}`);
+            setUser(userResponse.data);
+            console.log("User data:", userResponse.data);
+
+            localStorage.setItem("userInfo", JSON.stringify(userResponse.data));
+        },
+        onError: (error) => {
+            toast.error("Upload failed", {
+                description: error.response?.data?.message || "Failed to upload profile picture",
+            });
+        },
     });
 
     // Seller upgrade mutation
@@ -50,6 +84,38 @@ export default function ProfileInformation() {
             toast.error(
                 `Upgrade Failed: ${error.response?.data?.error || "Failed to initiate upgrade"}`
             );
+        },
+    });
+
+    // Phone number validation
+    const validatePhoneNumber = (phone) => {
+        return /^\+?[1-9]\d{9,14}$/.test(phone); // Ensures 10-15 digits with optional "+"
+    };
+
+    // Phone number update mutation
+    const {mutate: updatePhoneNumber, isPending: isUpdatingPhone} = useMutation({
+        mutationFn: async (newPhone) => {
+            const response = await axiosInstance.put(`/users/${userId}/update-phone`, {
+                phoneNumber: newPhone,
+            });
+            return response.data;
+        },
+        onSuccess: async () => {
+            toast.success("Phone number updated successfully");
+            setIsDialogOpen(false);
+
+            // Update user in global state and localStorage
+            const userResponse = await axiosInstance.get(`/users/${userId}`);
+            setUser(userResponse.data);
+            localStorage.setItem("userInfo", JSON.stringify(userResponse.data));
+
+            // Invalidate the user profile query to refetch the latest data
+            queryClient.invalidateQueries(["users", "profile", userId]);
+        },
+        onError: (error) => {
+            toast.error("Failed to update phone number", {
+                description: error.response?.data?.message || "An error occurred",
+            });
         },
     });
 
@@ -89,7 +155,36 @@ export default function ProfileInformation() {
     const userName = user?.username || "Unknown";
     const userProfilePicture = user?.profilePicture?.url || "";
     const userEmail = user?.email || "";
-    const userPhone = user?.phone || "/";
+
+    const [phone, setPhone] = useState("");
+    useEffect(() => {
+        if (user?.phoneNumber) {
+            setPhone(user.phoneNumber);
+        } else {
+            const storedUser = localStorage.getItem("userInfo");
+            if (storedUser) {
+                try {
+                    const parsedUser = JSON.parse(storedUser);
+                    setPhone(parsedUser.phoneNumber || "");
+                } catch (error) {
+                    console.error("Failed to parse stored user info:", error);
+                }
+            }
+        }
+    }, [user]);
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+    const handleSavePhone = () => {
+        if (!validatePhoneNumber(phone)) {
+            console.log("Validation failed - stopping execution.");
+            toast.error("Invalid phone number", {
+                description: "Please enter a valid phone number (e.g., +12345678901).",
+            });
+            return; // Stop execution
+        }
+
+        updatePhoneNumber(phone); // Call mutation only if validation passes
+    };
 
     return (
         <div>
@@ -111,17 +206,43 @@ export default function ProfileInformation() {
                 <div className="max-w mx-auto p-6">
                     <div className="bg-white rounded-2xl p-8 shadow-md">
                         {/* Profile Header */}
-                        <div className="flex flex-col md:flex-row items-center md:space-x-6 border-b border-gray-200 pb-6 mb-6">
-                            <Avatar className="h-16 w-16 rounded-full border-2 border-gray-300">
-                                <AvatarImage
-                                    src={userProfilePicture}
-                                    alt={userName}
-                                    className="h-full w-full object-cover rounded-full"
-                                />
-                                <AvatarFallback className="bg-gray-200 text-gray-600 font-medium h-full w-full flex items-center justify-center rounded-full">
-                                    {userName?.slice(0, 2).toUpperCase()}
-                                </AvatarFallback>
-                            </Avatar>
+                        <div className="flex flex-col md:flex-row md:space-x-6 border-b border-gray-200 pb-6 mb-6">
+                            <div className="flex flex-col items-center gap-4">
+                                <Avatar className="h-24 w-24 rounded-full border-2 border-gray-300">
+                                    <AvatarImage
+                                        src={userProfilePicture}
+                                        alt={userName}
+                                        className="h-full w-full object-cover rounded-full"
+                                    />
+                                    <AvatarFallback className="bg-gray-200 text-gray-600 font-medium text-2xl">
+                                        {userName?.slice(0, 2).toUpperCase()}
+                                    </AvatarFallback>
+                                </Avatar>
+
+                                {authUser._id === userId && (
+                                    <div className="flex flex-col items-center gap-2">
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            id="avatar-upload"
+                                            className="hidden"
+                                            onChange={(e) => {
+                                                const file = e.target.files?.[0];
+                                                if (file) uploadProfilePicture(file);
+                                            }}
+                                            disabled={isUploading}
+                                        />
+                                        <Button variant="outline" className="w-full" asChild>
+                                            <label
+                                                htmlFor="avatar-upload"
+                                                className="cursor-pointer"
+                                            >
+                                                Upload Photo
+                                            </label>
+                                        </Button>
+                                    </div>
+                                )}
+                            </div>
 
                             <div className="mt-4 md:mt-0 text-center md:text-left">
                                 <h2 className="text-2xl font-semibold text-gray-900">{userName}</h2>
@@ -132,25 +253,68 @@ export default function ProfileInformation() {
                         </div>
 
                         {/* Personal Information */}
-                        <div>
-                            <div className="flex justify-between items-center mb-4">
+                        <div className="bg-white p-6 rounded-lg shadow-sm">
+                            <div className="flex justify-between items-center mb-6">
                                 <h2 className="text-xl font-semibold text-gray-900">
                                     Personal Information
                                 </h2>
-                                {authUser._id === userId && (
-                                    <button className="text-gray-500 hover:text-gray-700">
-                                        Edit
-                                    </button>
-                                )}
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm text-gray-600">Phone</label>
-                                    <p className="mt-1 text-gray-800">{userPhone}</p>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="flex items-center justify-between gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-600">
+                                            Phone
+                                        </label>
+                                        <p className="mt-1 text-gray-800">{phone}</p>
+                                    </div>
+                                    {authUser._id === userId && (
+                                        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                                            <DialogTrigger asChild>
+                                                <Button
+                                                    variant="outline"
+                                                    className="text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                                                >
+                                                    Edit
+                                                </Button>
+                                            </DialogTrigger>
+                                            <DialogContent>
+                                                <DialogHeader>
+                                                    <DialogTitle>Edit Phone Number</DialogTitle>
+                                                </DialogHeader>
+                                                <div className="grid gap-4 py-4">
+                                                    <div className="grid grid-cols-4 items-center gap-4">
+                                                        <Label
+                                                            htmlFor="phone"
+                                                            className="text-right"
+                                                        >
+                                                            Phone
+                                                        </Label>
+                                                        <Input
+                                                            id="phone"
+                                                            value={phone}
+                                                            onChange={(e) =>
+                                                                setPhone(e.target.value)
+                                                            }
+                                                            className="col-span-3"
+                                                            placeholder="+12345678901"
+                                                        />
+                                                    </div>
+                                                    <Button
+                                                        onClick={handleSavePhone}
+                                                        disabled={isUpdatingPhone}
+                                                    >
+                                                        {isUpdatingPhone ? "Saving..." : "Save"}
+                                                    </Button>
+                                                </div>
+                                            </DialogContent>
+                                        </Dialog>
+                                    )}
                                 </div>
                                 <div className="md:col-span-2">
-                                    <label className="block text-sm text-gray-600">Email</label>
+                                    <label className="block text-sm font-medium text-gray-600">
+                                        Email
+                                    </label>
                                     <p className="mt-1 text-gray-800">{userEmail}</p>
                                 </div>
                             </div>

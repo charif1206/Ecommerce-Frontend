@@ -6,7 +6,7 @@ import categoriesa from "@/fakeData/categories.js";
 import useProductStore from "@/zustand/ProductsStore";
 import {keepPreviousData, useQuery} from "@tanstack/react-query";
 import {useEffect, useState} from "react";
-import {FiCheck} from "react-icons/fi";
+import {FiCheck, FiFilter, FiX} from "react-icons/fi";
 
 // Mobile Filter Toggle Component
 function MobileFilterToggle({isFilterOpen, setIsFilterOpen}) {
@@ -31,6 +31,7 @@ function FilterSidebar({
     sortOrder,
     handleSortChange,
     sidebarRef,
+    setIsFilterOpen,
 }) {
     return (
         <div
@@ -213,6 +214,7 @@ export default function Shop() {
                     handleCategoryChange={handleCategoryChange}
                     sortOrder={sortOrder}
                     handleSortChange={handleSortChange}
+                    setIsFilterOpen={setIsFilterOpen}
                 />
                 {isError ? (
                     <div className="flex-1 text-center py-10 space-y-4">

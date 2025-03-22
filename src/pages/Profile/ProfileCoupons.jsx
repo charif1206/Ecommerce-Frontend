@@ -1,7 +1,7 @@
 import axiosInstance from "@/Axios/AxiosInstance";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import {Badge} from "@/components/ui/badge";
+import {Button} from "@/components/ui/button";
+import {Card, CardContent} from "@/components/ui/card";
 import {
     Dialog,
     DialogContent,
@@ -11,11 +11,11 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import useAuthStore from "@/zustand/authStore";
-import { useMutation } from "@tanstack/react-query";
-import { Copy } from "lucide-react";
-import { useState } from "react";
-import { useParams } from "react-router-dom";
-import { toast } from "sonner";
+import {useMutation} from "@tanstack/react-query";
+import {Copy} from "lucide-react";
+import {useState} from "react";
+import {useParams} from "react-router-dom";
+import {toast} from "sonner";
 
 export default function ProfileCoupons() {
     const {id: userId} = useParams();

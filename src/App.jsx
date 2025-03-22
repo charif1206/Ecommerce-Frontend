@@ -1,7 +1,6 @@
-import {BrowserRouter, Navigate, Route, Routes} from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import Footer from "./components/Footer/Footer";
 import Header from "./components/Header/Header";
-import AdminDashboard from "./pages/Admin/AdminDachbord";
 import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
@@ -12,11 +11,11 @@ import Home from "./pages/home/home";
 import CartPage from "./pages/payment/CartPage";
 import CheckOutPage from "./pages/payment/CheckOutPage";
 import OrderSuccessPage from "./pages/payment/OrderSuccessPage";
+import SellerUpgradeSuccessPage from "./pages/payment/SellerUpgradeSuccessPage";
 import ProductDetails from "./pages/productdetails/ProductDetails";
 import Profile from "./pages/Profile/Profile";
 import Shop from "./pages/shop/Shop";
 import useAuthStore from "./zustand/authStore";
-import SellerUpgradeSuccessPage from "./pages/payment/SellerUpgradeSuccessPage";
 
 function App() {
     const user = useAuthStore((state) => state.user); // Access user from Zustand store
@@ -53,14 +52,6 @@ function App() {
                 <Route
                     path="/seller-upgrade-success"
                     element={user ? <SellerUpgradeSuccessPage /> : <Navigate to="/login" />}
-                />
-
-                {/* Admin Route */}
-                <Route
-                    path="/admin"
-                    element={
-                        user && user.roles === "admin" ? <AdminDashboard /> : <Navigate to="/" />
-                    }
                 />
             </Routes>
             <Footer />

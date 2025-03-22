@@ -1,12 +1,19 @@
 // OrderDetailsModal.jsx
 import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
+    Dialog,
+    DialogContent,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
 } from "@/components/ui/dialog";
-import { useEffect, useState } from "react";
+import {
+    Select,
+    SelectTrigger,
+    SelectValue,
+    SelectContent,
+    SelectItem,
+} from "@/components/ui/select"; // Import shadcn/ui Select components
+import {useEffect, useState} from "react";
 
 export default function OrderDetailsModal({order, onClose, onUpdateStatus, user}) {
     const [localStatus, setLocalStatus] = useState(order.status);
@@ -57,20 +64,23 @@ export default function OrderDetailsModal({order, onClose, onUpdateStatus, user}
                         order.userId !== user._id && (
                             <div>
                                 <p className="text-sm text-gray-600">Status</p>
-                                <select
+                                <Select
                                     value={localStatus}
-                                    onChange={(e) => {
-                                        const newStatus = e.target.value;
+                                    onValueChange={(newStatus) => {
                                         setLocalStatus(newStatus);
                                         onUpdateStatus(order._id, newStatus);
                                     }}
-                                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
                                 >
-                                    <option value="pending">Pending</option>
-                                    <option value="shipped">Shipped</option>
-                                    <option value="delivered">Delivered</option>
-                                    <option value="cancelled">Cancelled</option>
-                                </select>
+                                    <SelectTrigger className="w-full">
+                                        <SelectValue placeholder="Select status" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="pending">Pending</SelectItem>
+                                        <SelectItem value="shipped">Shipped</SelectItem>
+                                        <SelectItem value="delivered">Delivered</SelectItem>
+                                        <SelectItem value="cancelled">Cancelled</SelectItem>
+                                    </SelectContent>
+                                </Select>
                             </div>
                         )}
                     {/* Products List */}
@@ -116,7 +126,7 @@ export default function OrderDetailsModal({order, onClose, onUpdateStatus, user}
                 <DialogFooter>
                     <button
                         onClick={onClose}
-                        className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                        className="mt-4 px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-900 dark:bg-gray-700 dark:hover:bg-gray-800 transition-colors duration-200"
                     >
                         Close
                     </button>
