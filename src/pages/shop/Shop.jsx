@@ -14,9 +14,9 @@ function MobileFilterToggle({isFilterOpen, setIsFilterOpen}) {
         <div className="lg:hidden w-full bg-white p-4 sticky top-0 z-10 shadow-md">
             <button
                 onClick={() => setIsFilterOpen(!isFilterOpen)}
-                className="flex items-center space-x-2 text-gray-600"
+                className="flex items-center space-x-2 text-gray-600 hover:text-gray-800"
             >
-                <span className="material-icons">filter_list</span>
+                <FiFilter className="w-5 h-5" />
                 <span>Filter Products</span>
             </button>
         </div>
@@ -30,22 +30,34 @@ function FilterSidebar({
     handleCategoryChange,
     sortOrder,
     handleSortChange,
+    sidebarRef,
 }) {
     return (
         <div
-            className={`bg-white shadow-lg lg:w-64 lg:block lg:sticky lg:top-0 lg:h-screen ${
-                isFilterOpen ? "block" : "hidden"
+            ref={sidebarRef}
+            className={`bg-white shadow-lg lg:w-64 lg:block lg:sticky lg:top-0 lg:h-screen z-20 ${
+                isFilterOpen ? "block fixed inset-y-0 left-0 w-64" : "hidden"
             }`}
         >
-            <div className="p-6 space-y-6">
+            <div className="p-6 space-y-6 h-full overflow-y-auto">
+                <div className="flex justify-between items-center pb-4 border-b">
+                    <h2 className="text-lg font-semibold">Filters</h2>
+                    <button
+                        onClick={() => setIsFilterOpen(false)}
+                        className="lg:hidden p-1 hover:bg-gray-100 rounded"
+                    >
+                        <FiX className="w-5 h-5" />
+                    </button>
+                </div>
+
                 {/* Categories Filter */}
                 <div>
-                    <h3 className="text-lg font-semibold mb-4 text-gray-800">Categories</h3>
+                    <h3 className="text-sm font-medium mb-3 text-gray-700">Categories</h3>
                     <div className="space-y-2">
                         {categoriesa.map((category) => (
                             <label
                                 key={category.id}
-                                className="flex items-center p-3 rounded-lg hover:bg-gray-50 cursor-pointer"
+                                className="flex items-center p-2 rounded-md hover:bg-gray-50 cursor-pointer"
                             >
                                 <input
                                     type="checkbox"
@@ -53,12 +65,12 @@ function FilterSidebar({
                                     checked={selectedCategories.includes(category.name)}
                                     onChange={() => handleCategoryChange(category.name)}
                                 />
-                                <div className="w-5 h-5 border-2 border-gray-300 rounded-md mr-3 flex items-center justify-center">
+                                <div className="w-4 h-4 border-2 border-gray-300 rounded-sm mr-2 flex items-center justify-center">
                                     {selectedCategories.includes(category.name) && (
-                                        <FiCheck className="w-4 h-4 text-blue-600" />
+                                        <FiCheck className="w-3 h-3 text-blue-600" />
                                     )}
                                 </div>
-                                <span className="text-gray-700">{category.name}</span>
+                                <span className="text-sm text-gray-600">{category.name}</span>
                             </label>
                         ))}
                     </div>
@@ -66,20 +78,19 @@ function FilterSidebar({
 
                 {/* Sort Order */}
                 <div>
-                    <h3 className="text-lg font-semibold mb-4 text-gray-800">Sort By</h3>
+                    <h3 className="text-sm font-medium mb-3 text-gray-700">Sort By</h3>
                     <div className="relative">
                         <select
                             value={sortOrder}
                             onChange={handleSortChange}
-                            className="block w-full pl-4 pr-10 py-2.5 text-base border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none"
+                            className="block w-full pl-3 pr-8 py-2 text-sm border border-gray-200 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none"
                         >
                             <option value="asc">Price: Low to High</option>
                             <option value="desc">Price: High to Low</option>
                         </select>
-                        {/* Custom dropdown arrow */}
                         <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
                             <svg
-                                className="w-5 h-5"
+                                className="w-4 h-4"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
