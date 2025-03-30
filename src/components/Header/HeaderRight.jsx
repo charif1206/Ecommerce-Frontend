@@ -10,7 +10,7 @@ import {useNavigate} from "react-router-dom";
 import axiosInstance from "@/Axios/AxiosInstance";
 import {RiCoinsFill} from "react-icons/ri";
 
-export default function HeaderRight() {
+export default function HeaderRight({isMobile = false}) {
     const user = useAuthStore((state) => state.user);
     const setUser = useAuthStore((state) => state.setUser);
     const items = useCartStore((state) => state.items);
@@ -26,7 +26,6 @@ export default function HeaderRight() {
                 withCredentials: true,
             }),
         onMutate: () => {
-            // Immediate client-side cleanup for better UX
             localStorage.removeItem("userInfo");
             localStorage.removeItem("cartItems");
             setUser(null);
@@ -48,10 +47,10 @@ export default function HeaderRight() {
     };
 
     return (
-        <div className="flex items-center gap-6">
-            {/* Profile Link with Image and Name */}
+        <div className={`flex ${isMobile ? "flex-col items-center gap-4" : "items-center gap-6"}`}>
+            {/* Profile Link */}
             {user && (
-                <Link to={`/profile/${user._id}`} className="hidden md:flex items-center gap-2">
+                <Link to={`/profile/${user._id}`} className="flex items-center gap-2">
                     <div className="relative">
                         {user.profilePicture ? (
                             <img
@@ -71,21 +70,23 @@ export default function HeaderRight() {
                 </Link>
             )}
 
-            {/* Cart Link */}
-            <Link to="/cart" className="hidden md:block">
-                <NavItem icon={<MdAddShoppingCart />} title="Cart" count={cartCount} />
-            </Link>
+            {/* Cart Link (Visible only if logged in) */}
+            {user && (
+                <Link to="/cart">
+                    <NavItem icon={<MdAddShoppingCart />} title="Cart" count={cartCount} />
+                </Link>
+            )}
 
             {/* Shop Link */}
-            <Link to="/shop" className="hidden md:block">
+            <Link to="/shop">
                 <NavItem icon={<CiShoppingCart />} title="Shop" />
             </Link>
 
-            {/* Coins Display - Clickable to Profile with coupons tab */}
+            {/* Coins Display (Visible only if logged in) */}
             {user && (
                 <Link
                     to={`/profile/${user._id}?tab=coupons`}
-                    className="hidden md:flex items-center gap-2 cursor-pointer"
+                    className="flex items-center gap-2 cursor-pointer"
                 >
                     <RiCoinsFill className="h-6 w-6 text-yellow-500" />
                     <span className="font-semibold text-gray-700">{user.coins}</span>
@@ -94,17 +95,17 @@ export default function HeaderRight() {
 
             {/* Auth Buttons */}
             {!user ? (
-                <div className="flex items-center gap-4">
+                <div className={`flex ${isMobile ? "flex-col w-full" : "items-center gap-4"}`}>
                     <Link
                         to="/login"
-                        className="hidden md:flex items-center px-5 py-2 border border-black text-black rounded-md transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-200"
+                        className="flex items-center px-5 py-2 border border-black text-black rounded-md transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-200"
                     >
                         <FiLogIn className="text-lg mr-2" />
                         <span>Login</span>
                     </Link>
                     <Link
                         to="/register"
-                        className="hidden md:flex items-center px-5 py-2 bg-black text-white rounded-md shadow hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-200"
+                        className="flex items-center px-5 py-2 bg-black text-white rounded-md shadow hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-200"
                     >
                         <FiUserPlus className="text-lg mr-2" />
                         <span>Register</span>
@@ -114,7 +115,7 @@ export default function HeaderRight() {
                 <Link
                     to="#"
                     onClick={handleLogout}
-                    className="hidden md:flex items-center px-5 py-2 border border-black text-black rounded-md transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-200"
+                    className="flex items-center px-5 py-2 border border-black text-black rounded-md transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-200"
                 >
                     <FiLogIn className="text-lg mr-2" />
                     <span>Logout</span>

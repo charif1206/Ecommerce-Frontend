@@ -1,7 +1,7 @@
 import axiosInstance from "@/Axios/AxiosInstance";
 import {Button} from "@/components/ui/button";
 import {ScrollArea} from "@/components/ui/scroll-area";
-import {Sheet, SheetContent, SheetTrigger} from "@/components/ui/sheet";
+import {Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger} from "@/components/ui/sheet";
 import {Skeleton} from "@/components/ui/skeleton";
 import {Tabs, TabsList, TabsTrigger} from "@/components/ui/tabs";
 import useAuthStore from "@/zustand/authStore";
@@ -12,10 +12,10 @@ import {useParams, useSearchParams} from "react-router-dom";
 import ManageOrders from "./ManageOrders";
 import ManageProduct from "./ManageProduct";
 import ManageUsers from "./ManageUsers";
+import ProfileCoupons from "./ProfileCoupons";
 import ProfileInformation from "./ProfileInformation";
 import ProfileLikes from "./ProfileLikes";
 import ProfileWishlist from "./ProfileWishlist";
-import ProfileCoupons from "./ProfileCoupons";
 
 // Import AlertDialog components
 import {
@@ -42,17 +42,17 @@ export default function Profile() {
     // State to control the deletion alert dialog
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-    const {mutate: handleLogout, isLoading} = useMutation({
-        mutationFn: async () => {
-            await axiosInstance.post("/auth/logout");
-        },
-        onSuccess: () => {
-            logout();
-        },
-        onError: (error) => {
-            console.error("Logout failed:", error.response?.data || error.message);
-        },
-    });
+    // const {mutate: handleLogout, isLoading} = useMutation({
+    //     mutationFn: async () => {
+    //         await axiosInstance.post("/auth/logout");
+    //     },
+    //     onSuccess: () => {
+    //         logout();
+    //     },
+    //     onError: (error) => {
+    //         console.error("Logout failed:", error.response?.data || error.message);
+    //     },
+    // });
 
     // Mutation to handle account deletion
     const {mutate: handleDeleteAccount, isLoading: isDeleting} = useMutation({
@@ -67,7 +67,7 @@ export default function Profile() {
         },
     });
 
-    // Main navigation items without Delete Account (it’s now a separate button)
+    // Main navigation items without Delete Account (it's now a separate button)
     const mainNavigationItems = [
         {id: "profile", label: "Profile"},
         ...(user._id === userId
@@ -86,13 +86,11 @@ export default function Profile() {
 
     // Helper function to render a Tab trigger.
     const renderTabTrigger = (item) => {
-        const baseClasses = "w-full justify-start px-4 py-3";
-        const activeClasses = "data-[state=active]:bg-accent";
         return (
             <TabsTrigger
                 key={item.id}
                 value={item.id}
-                className={`${baseClasses} ${activeClasses}`}
+                className="w-full justify-start px-4 py-3 text-left text-sm font-medium transition-all hover:bg-accent/50 rounded-md data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"
                 onClick={() => {
                     setIsSidebarOpen(false);
                     setActiveTab(item.id);
@@ -110,27 +108,31 @@ export default function Profile() {
                 <div className="flex items-center justify-between p-4">
                     <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
                         <SheetTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                                <FaBars className="h-5 w-5" />
+                            <Button variant="outline" size="icon" aria-label="Open menu">
+                                <FaBars className="h-4 w-4" />
                             </Button>
                         </SheetTrigger>
-                        <SheetContent side="left" className="w-[280px] p-2">
-                            <ScrollArea className="h-full p-4">
-                                <div className="flex flex-col h-full justify-between">
+                        <SheetContent side="left" className="w-[280px] p-0">
+                            <SheetHeader className="px-4 py-6 border-b">
+                                <SheetTitle>Menu</SheetTitle>
+                            </SheetHeader>
+                            <ScrollArea className="h-[calc(100vh-80px)]">
+                                <div className="flex flex-col py-2">
                                     <Tabs
                                         value={activeTab}
                                         onValueChange={setActiveTab}
                                         orientation="vertical"
-                                        className="space-y-1"
+                                        className="w-full"
                                     >
-                                        <TabsList className="flex flex-col items-start h-auto bg-transparent">
+                                        <TabsList className="flex flex-col items-start w-full h-auto bg-transparent space-y-1 px-2">
                                             {mainNavigationItems.map((item) =>
                                                 renderTabTrigger(item)
                                             )}
                                         </TabsList>
                                     </Tabs>
+
                                     {user._id === userId && (
-                                        <div className="mt-4">
+                                        <div className="px-4 py-4 mt-2 border-t">
                                             <Button
                                                 variant="destructive"
                                                 className="w-full"
@@ -147,14 +149,6 @@ export default function Profile() {
                             </ScrollArea>
                         </SheetContent>
                     </Sheet>
-                    <Button
-                        variant="destructive"
-                        onClick={handleLogout}
-                        disabled={isLoading}
-                        className="ml-auto"
-                    >
-                        {isLoading ? "Logging out..." : "Logout"}
-                    </Button>
                 </div>
             </div>
 

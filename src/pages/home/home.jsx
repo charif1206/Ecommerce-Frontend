@@ -33,9 +33,9 @@ export default function Home() {
                 {/* Dark Overlay */}
                 <div className="absolute inset-0 bg-black opacity-70 z-10" />
                 <div className="relative z-20 flex flex-col justify-center items-center h-full text-white container mx-auto">
-                    <h1 className="text-5xl font-bold mb-4">das tech store</h1>
+                    <h1 className="text-5xl font-bold mb-4">DasTech store</h1>
                     <p className="text-lg sm:text-xl mb-8 text-center max-w-4xl px-6 sm:px-12 mx-auto leading-relaxed text-gray-300 font-inter">
-                        Welcome to DAS Tech Store! 🚀 <br />
+                        Welcome to DasTech Store! 🚀 <br />
                         Your one-stop shop for the latest and greatest in phones, headphones, and
                         smartwatches. <br />
                         Discover top-rated products, unbeatable deals, and cutting-edge
@@ -65,15 +65,7 @@ export default function Home() {
                 {/* Product List */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                     {topRatedProducts?.map((product) => (
-                        <ProductCard
-                            key={product._id}
-                            _id={product._id}
-                            name={product.name}
-                            price={product.price}
-                            ratings={product.ratings}
-                            productImages={product.productImages}
-                            seller={product.seller}
-                        />
+                        <ProductCard key={product._id} {...product} />
                     ))}
                 </div>
             </div>

@@ -78,7 +78,7 @@ export default function Login() {
     });
 
     const onSubmit = (data) => {
-        login(data); 
+        login(data);
     };
 
     return (
@@ -100,8 +100,13 @@ export default function Login() {
                     {/* Logo */}
                     <div className="text-center lg:text-left">
                         <h1 className="text-3xl font-bold">
-                            das<span className="text-black font-thin">tech</span>
-                            <span className="text-yellow-500 font-black">.</span>
+                            <span className="text-2xl font-extrabold text-gray-900 tracking-wide">
+                                Das
+                                <span className="text-2xl font-light text-gray-500 tracking-wide">
+                                    Tech
+                                    <span className="text-3xl font-black text-yellow-500">.</span>
+                                </span>
+                            </span>
                         </h1>
                     </div>
 

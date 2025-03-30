@@ -66,15 +66,7 @@ export default function RelatedProducts({product}) {
             {/* Display Related Products using a responsive grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {filteredProducts.map((prod) => (
-                    <ProductCard
-                        key={prod._id}
-                        _id={prod._id}
-                        name={prod.name}
-                        price={prod.price}
-                        ratings={prod.ratings}
-                        productImages={prod.productImages}
-                        seller={prod.seller}
-                    />
+                    <ProductCard key={prod._id} {...prod} />
                 ))}
             </div>
 

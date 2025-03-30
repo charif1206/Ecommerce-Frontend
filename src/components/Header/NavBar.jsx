@@ -1,4 +1,5 @@
 import {useEffect, useState} from "react";
+import {useNavigate} from "react-router-dom";
 import {CiSearch} from "react-icons/ci";
 import {ImSpinner8} from "react-icons/im";
 import {useQuery} from "@tanstack/react-query";
@@ -12,7 +13,8 @@ const fetchProducts = async (searchQuery) => {
     return data;
 };
 
-export default function NavBar() {
+export default function NavBar({onLinkClick}) {
+    const navigate = useNavigate();
     const searchQuery = useProductStore((state) => state.searchQuery);
     const setSearchQueryValue = useProductStore((state) => state.setSearchQueryValue);
     const setSearchProducts = useProductStore((state) => state.setSearchProducts);
@@ -20,7 +22,6 @@ export default function NavBar() {
 
     const [isResultsOpen, setIsResultsOpen] = useState(false);
 
-    // React Query to fetch products based on the search query
     const {
         data: products,
         isFetching,
@@ -28,17 +29,16 @@ export default function NavBar() {
     } = useQuery({
         queryKey: ["products", searchQuery],
         queryFn: () => fetchProducts(searchQuery),
-        enabled: searchQuery.length > 0, // Only fetch when searchQuery is non-empty
+        enabled: searchQuery.length > 0,
     });
 
     useEffect(() => {
         if (products && Array.isArray(products.products)) {
-            setSearchProducts(products.products); // Update products in the store
+            setSearchProducts(products.products);
         }
     }, [products, setSearchProducts]);
 
     useEffect(() => {
-        // Close results when clicking outside
         const handleClickOutside = (e) => {
             if (!e.target.closest(".search-container")) {
                 setIsResultsOpen(false);
@@ -49,8 +49,9 @@ export default function NavBar() {
     }, []);
 
     const handleProductSelect = (productName) => {
-        setSearchQueryValue(productName); // Set the selected product as the search query
-        setIsResultsOpen(false); // Close the results
+        setSearchQueryValue(productName);
+        setIsResultsOpen(false);
+        if (onLinkClick) onLinkClick(); // close mobile menu if provided
     };
 
     return (
@@ -62,10 +63,11 @@ export default function NavBar() {
                     className="w-full px-4 py-4 pl-12 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-lg h-14"
                     value={searchQuery}
                     onChange={(e) => {
-                        setSearchQueryValue(e.target.value); // Update store's search query directly
-                        setIsResultsOpen(true); // Open the results dropdown
+                        setSearchQueryValue(e.target.value);
+                        setIsResultsOpen(true);
+                        navigate("/shop"); // redirect to shop page on type
                     }}
-                    onFocus={() => setIsResultsOpen(true)} // Open results on focus
+                    onFocus={() => setIsResultsOpen(true)}
                     aria-label="Search products"
                 />
                 <CiSearch

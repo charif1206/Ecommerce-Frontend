@@ -9,6 +9,7 @@ import {Rating} from "@smastrom/react-rating";
 import "@smastrom/react-rating/style.css";
 import {useMutation} from "@tanstack/react-query";
 import axiosInstance from "@/Axios/AxiosInstance";
+import {toast} from "sonner";
 
 export default function ProductCard({
     _id,
@@ -67,7 +68,8 @@ export default function ProductCard({
 
     const handleLikeToggle = () => {
         if (!authUser) {
-            // Optionally handle unauthenticated state (e.g., redirect to login)
+            toast.dismiss();
+            toast.error("Please login to like this product");
             return;
         }
         toggleLikeMutation.mutate();
@@ -75,7 +77,8 @@ export default function ProductCard({
 
     const handleFavoriteToggle = () => {
         if (!authUser) {
-            // Optionally handle unauthenticated state
+            toast.dismiss();
+            toast.error("please login to favorite this product");
             return;
         }
         toggleFavoriteMutation.mutate();
