@@ -1,18 +1,13 @@
-import axiosInstance from "@/Axios/AxiosInstance";
 import ImageGallery from "@/components/product/ImageGallery";
 import ProductDetails from "@/components/product/ProductDetails";
 import ProductInfo from "@/components/product/ProductInfo";
 import ProductReviews from "@/components/product/ProductReviews";
 import RelatedProducts from "@/components/product/RelatedProducts";
-import {useQuery} from "@tanstack/react-query";
-import {useEffect, useState} from "react";
-import {useParams} from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import useProductById from "./hooks/useProductById";
 
 // Fetch product data from the backend
-const fetchProductDetails = async (productId) => {
-    const response = await axiosInstance.get(`/products/${productId}`);
-    return response.data; // Return the product data
-};
 
 export default function ProductDetailsPage() {
     const [selectedImage, setSelectedImage] = useState(0);
@@ -25,15 +20,7 @@ export default function ProductDetailsPage() {
     const productId = id;
 
     // Use React Query's useQuery hook to fetch the product data
-    const {
-        data: product,
-        isLoading,
-        error,
-    } = useQuery({
-        queryKey: ["product", productId], // Query key with productId as a unique identifier
-        queryFn: () => fetchProductDetails(productId), // The function to fetch data
-        enabled: !!productId, // Ensure query runs only if productId is available
-    });
+    const {data: product, isLoading, error} = useProductById(productId);
 
     useEffect(() => {
         // Smooth scroll to the top of the page whenever the URL changes

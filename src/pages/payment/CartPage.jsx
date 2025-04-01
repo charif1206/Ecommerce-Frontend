@@ -1,64 +1,32 @@
-import {useState} from "react";
-import {Link} from "react-router-dom";
-import {useQuery, useMutation, useQueryClient} from "@tanstack/react-query";
 import axiosInstance from "@/Axios/AxiosInstance";
-import {toast} from "sonner";
-import {FiShoppingBag, FiXCircle, FiPlus, FiMinus} from "react-icons/fi";
-import useCartStore from "@/zustand/cartStore";
 import {loadStripe} from "@stripe/stripe-js";
+import {useMutation, useQueryClient} from "@tanstack/react-query";
+import {useState} from "react";
+import {FiMinus, FiPlus, FiShoppingBag, FiXCircle} from "react-icons/fi";
+import {Link} from "react-router-dom";
+import {toast} from "sonner";
+import useAddToCart from "./hooks/useAddToCart";
+import useCartData from "./hooks/useCartdata";
+import useValidateCoupon from "./hooks/useValidateCoupon";
+import useRemoveItem from "./hooks/useRemoveItem";
 
 const stripePromise = loadStripe(
     "pk_test_51QL8tPE2SYKPhJCMl6nuNHAfpEvwZs3fnJXH0FxDwdp41tsoBMPf0aUM8UIflYhSSlX3ZoKJ4NnSPvpJg3wCvHIZ00TemcIYIK"
 );
 
 export default function CartPage() {
-    const {items: cartItems, setCartItems} = useCartStore();
     const queryClient = useQueryClient();
     const [couponCode, setCouponCode] = useState("");
     const [discount, setDiscount] = useState(0);
 
     // Fetch cart data
-    const {
-        data: cart,
-        isLoading,
-        isError,
-    } = useQuery({
-        queryKey: ["cart"],
-        queryFn: async () => {
-            const response = await axiosInstance.get("/cart");
-            setCartItems(response.data.items);
-            return response.data;
-        },
-        staleTime: 5 * 60 * 1000,
-        refetchOnWindowFocus: true,
-    });
+    const {data: cart, isLoading, isError} = useCartData();
 
     // Mutation: Increase item quantity
-    const {mutate: addItem, isPending: isAdding} = useMutation({
-        mutationFn: (productId) => axiosInstance.post("/cart/add", {productId, quantity: 1}),
-        onSuccess: () => {
-            queryClient.invalidateQueries(["cart"]);
-            toast.success("Item quantity increased");
-        },
-        onError: (error, productId) => {
-            setCartItems(
-                cartItems.map((item) =>
-                    item.productId._id === productId ? {...item, quantity: item.quantity - 1} : item
-                )
-            );
-            toast.error(error.response?.data?.message || "Failed to update cart");
-        },
-    });
+    const {mutate: addItem, isPending: isAdding} = useAddToCart();
 
     // Mutation: Decrease item quantity
-    const {mutate: removeItem, isPending: isRemoving} = useMutation({
-        mutationFn: (productId) => axiosInstance.patch("/cart/remove", {productId}),
-        onSuccess: () => {
-            queryClient.invalidateQueries(["cart"]);
-            toast.success("Item quantity decreased");
-        },
-        onError: (error) => toast.error(error.response?.data?.message || "Failed to update cart"),
-    });
+    const {mutate: removeItem, isPending: isRemoving} = useRemoveItem();
 
     // Mutation: Remove all units of an item from the cart
     const {mutate: removeAllItems, isPending: isRemovingAll} = useMutation({
@@ -71,23 +39,11 @@ export default function CartPage() {
     });
 
     // Mutation: Validate coupon via API
-    const {mutate: validateCoupon} = useMutation({
-        mutationFn: ({code, cartTotal}) =>
-            axiosInstance.post("/coupons/validate-coupon", {code, cartTotal}),
-        onSuccess: (response) => {
-            const data = response.data;
-            setDiscount(data.value);
-            toast.success(data.message);
-        },
-        onError: (error) => {
-            setDiscount(0);
-            toast.error(error.response?.data?.error || "Invalid coupon code");
-        },
-    });
+    const {mutate: validateCoupon} = useValidateCoupon(setDiscount);
 
     const applyCoupon = () => {
         if (cart && cart.totalPrice) {
-            validateCoupon({code: couponCode, cartTotal: cart.totalPrice});
+            validateCoupon({code: couponCode, cartTotal: Number(cart.totalPrice)});
         }
     };
 
@@ -96,7 +52,7 @@ export default function CartPage() {
         const stripe = await stripePromise;
         // Pass the updated total (subtotal - discount) and couponCode to the backend
         const res = await axiosInstance.post("/payments/create-checkout-session", {
-            total: (cart?.totalPrice || 0) - discount,
+            total: Number(cart?.totalPrice || 0) - discount,
             couponCode,
         });
         const session = res.data;
@@ -106,8 +62,8 @@ export default function CartPage() {
         }
     };
 
-    // Calculate order totals
-    const subtotal = cart?.totalPrice || 0;
+    // Calculate order totals (convert to number to avoid NaN)
+    const subtotal = Number(cart?.totalPrice) || 0;
     const total = subtotal - discount;
 
     if (isLoading)
@@ -190,7 +146,6 @@ export default function CartPage() {
                                                 <FiShoppingBag className="text-gray-400 text-xl" />
                                             )}
                                         </div>
-
                                         {/* Product Details */}
                                         <div className="flex-1">
                                             <div className="flex justify-between items-start">
@@ -215,7 +170,6 @@ export default function CartPage() {
                                                     <FiXCircle className="text-xl" />
                                                 </button>
                                             </div>
-
                                             {/* Quantity Controls */}
                                             <div className="flex items-center gap-3 mt-3">
                                                 <button
@@ -248,7 +202,6 @@ export default function CartPage() {
                                 <FiShoppingBag className="text-xl" />
                                 Order Summary
                             </h2>
-
                             <div className="space-y-3 text-sm">
                                 {/* Pricing Breakdown */}
                                 <div className="flex justify-between">

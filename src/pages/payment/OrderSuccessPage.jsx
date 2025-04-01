@@ -1,5 +1,6 @@
 import axiosInstance from "@/Axios/AxiosInstance";
 import useAuthStore from "@/zustand/authStore";
+import useCartStore from "@/zustand/cartStore";
 import {useMutation, useQuery} from "@tanstack/react-query";
 import {ArrowRight, CheckCircle, Clock, Package, WalletCards} from "lucide-react";
 import {useEffect, useState} from "react";
@@ -12,6 +13,7 @@ const OrderSuccessPage = () => {
     const setUser = useAuthStore((state) => state.setUser);
     const [searchParams] = useSearchParams();
     const sessionId = searchParams.get("session_id");
+    const setCartItems = useCartStore((state) => state.setCartItems);
 
     // Set mounted flag once the component has mounted
     useEffect(() => {
@@ -39,6 +41,7 @@ const OrderSuccessPage = () => {
     } = useMutation({
         mutationFn: (sessionId) => axiosInstance.post("/payments/checkout-success", {sessionId}),
         onSuccess: async () => {
+            setCartItems([]);
             localStorage.removeItem("cartItems");
             // Mark this session as processed so that it won't be re-processed on refresh
             localStorage.setItem(`checkoutProcessed_${sessionId}`, "true");

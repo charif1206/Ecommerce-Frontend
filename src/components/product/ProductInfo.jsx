@@ -1,14 +1,14 @@
-import axiosInstance from "@/Axios/AxiosInstance";
 import useAuthStore from "@/zustand/authStore";
-import { Rating } from "@smastrom/react-rating";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
-import { FaBookmark, FaHeart, FaRegBookmark, FaRegHeart } from "react-icons/fa";
-import { toast } from "sonner";
+import {Rating} from "@smastrom/react-rating";
+import {useEffect, useState} from "react";
+import {FaBookmark, FaHeart, FaRegBookmark, FaRegHeart} from "react-icons/fa";
+import {toast} from "sonner";
+import useAddToCart from "./hooks/useAddToCart";
+import useToggleFavorite from "./hooks/useToggleFavorite";
+import useToggleLike from "./hooks/useToggleLike";
 
-export default function ProductInfo({product, quantity, setQuantity, addToCart, isPending}) {
+export default function ProductInfo({product, quantity, setQuantity, isPending}) {
     const user = useAuthStore((state) => state.user);
-    const queryClient = useQueryClient();
 
     // Initialize local state based on incoming product props and user
     const [isLiked, setIsLiked] = useState(() => (user ? product.likes.includes(user._id) : false));
@@ -17,37 +17,10 @@ export default function ProductInfo({product, quantity, setQuantity, addToCart, 
         user ? product.favorites.includes(user._id) : false
     );
 
-    // Mutation to toggle like
-    const likeMutation = useMutation({
-        mutationFn: async () => {
-            const response = await axiosInstance.put(`/products/like/${product._id}`);
-            return response.data;
-        },
-        onSuccess: (data) => {
-            // Assume API returns the updated likes array
-            setLikeCount(data.likes.length);
-            setIsLiked((prev) => !prev);
-            queryClient.invalidateQueries({queryKey: ["product", product._id]});
-        },
-        onError: (error) => {
-            toast.error(error.response?.data?.message || "Failed to update like");
-        },
-    });
-
-    // Mutation to toggle favorite
-    const favoriteMutation = useMutation({
-        mutationFn: async () => {
-            const response = await axiosInstance.put(`/products/favorite/${product._id}`);
-            return response.data;
-        },
-        onSuccess: () => {
-            setIsFavorited((prev) => !prev);
-            queryClient.invalidateQueries({queryKey: ["product", product._id]});
-        },
-        onError: (error) => {
-            toast.error(error.response?.data?.message || "Failed to update favorite");
-        },
-    });
+    // Mutation to add product to cart
+    const addToCartMutation = useAddToCart(product._id, quantity);
+    const likeMutation = useToggleLike(product._id, setLikeCount, setIsLiked);
+    const favoriteMutation = useToggleFavorite(product._id, setIsFavorited);
 
     // Resync local state when authUser, likes, or favorites change
     useEffect(() => {
@@ -62,8 +35,7 @@ export default function ProductInfo({product, quantity, setQuantity, addToCart, 
     const handleLikeToggle = () => {
         if (!user) {
             toast.dismiss();
-            toast.error("Please login to like this product");
-            return;
+            return toast.error("Please login to like this product");
         }
         likeMutation.mutate();
     };
@@ -72,13 +44,12 @@ export default function ProductInfo({product, quantity, setQuantity, addToCart, 
     const handleFavoriteToggle = () => {
         if (!user) {
             toast.dismiss();
-            toast.error("Please login to favorite this product");
-            return;
+            return toast.error("Please login to favorite this product");
         }
         favoriteMutation.mutate();
     };
 
-    // Quantity change remains the same
+    // Handle quantity change remains the same
     const handleQuantityChange = (newQuantity) => {
         const maxAllowed = product.stock;
         const clamped = Math.max(1, Math.min(newQuantity, maxAllowed));
@@ -88,9 +59,19 @@ export default function ProductInfo({product, quantity, setQuantity, addToCart, 
         setQuantity(clamped);
     };
 
+    // Handle add to cart using the mutation
+    const handleAddToCart = () => {
+        if (!user) {
+            toast.dismiss();
+            return toast.error("Please login to add items to cart");
+        }
+        addToCartMutation.mutate();
+    };
+
     const isOutOfStock = product.stock < 1;
     const exceedsStock = quantity > product.stock;
-    const addButtonDisabled = isPending || isOutOfStock || exceedsStock;
+    const addButtonDisabled =
+        isPending || isOutOfStock || exceedsStock || addToCartMutation.isLoading;
 
     return (
         <div className="flex flex-col lg:justify-between">
@@ -142,7 +123,7 @@ export default function ProductInfo({product, quantity, setQuantity, addToCart, 
                 <div className="flex gap-6 mt-6">
                     {/* Add to Cart Button */}
                     <button
-                        onClick={() => addToCart()}
+                        onClick={handleAddToCart}
                         disabled={addButtonDisabled}
                         className={`flex-1 py-3 rounded-lg transition-colors ease-in-out duration-200 ${
                             addButtonDisabled
@@ -154,7 +135,7 @@ export default function ProductInfo({product, quantity, setQuantity, addToCart, 
                             ? "Out of Stock"
                             : exceedsStock
                             ? `Max ${product.stock} allowed`
-                            : isPending
+                            : addToCartMutation.isLoading
                             ? "Adding..."
                             : `Add ${quantity} to Cart`}
                     </button>
