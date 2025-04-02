@@ -3,7 +3,7 @@ import {useQueryClient, useMutation, useQuery} from "@tanstack/react-query";
 import axiosInstance from "@/Axios/AxiosInstance";
 import useAuthStore from "@/zustand/authStore";
 import {Avatar, AvatarFallback, AvatarImage} from "@radix-ui/react-avatar";
-import {DollarSign, Package, ShoppingCart, Users} from "lucide-react";
+import {DollarSign, Loader2Icon, Package, ShoppingCart, Users} from "lucide-react";
 import {useParams} from "react-router-dom";
 import {motion} from "framer-motion";
 import {Button} from "@/components/ui/button";
@@ -237,7 +237,14 @@ export default function ProfileInformation() {
                                                 htmlFor="avatar-upload"
                                                 className="cursor-pointer"
                                             >
-                                                Upload Photo
+                                                {isUploading ? (
+                                                    <>
+                                                        uploading{" "}
+                                                        <Loader2Icon className="animate-spin" />
+                                                    </>
+                                                ) : (
+                                                    "Change Picture"
+                                                )}
                                             </label>
                                         </Button>
                                     </div>

@@ -22,9 +22,11 @@ export default function SellerUpgradeSuccessPage() {
             const {data: user} = await axiosInstance.get(`/users/${userId}`);
             setUser(user);
             localStorage.setItem("userInfo", JSON.stringify(user));
+            toast.dismiss();
             toast.success("Upgrade Successful! Your seller account has been activated");
         },
         onError: (error) => {
+            toast.dismiss();
             toast.error(
                 `Upgrade Failed: ${error.response?.data?.error || "Failed to complete upgrade"}`
             );

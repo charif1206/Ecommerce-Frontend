@@ -1,14 +1,14 @@
 import axiosInstance from "@/Axios/AxiosInstance";
-import {loadStripe} from "@stripe/stripe-js";
-import {useMutation, useQueryClient} from "@tanstack/react-query";
-import {useState} from "react";
-import {FiMinus, FiPlus, FiShoppingBag, FiXCircle} from "react-icons/fi";
-import {Link} from "react-router-dom";
-import {toast} from "sonner";
+import { loadStripe } from "@stripe/stripe-js";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { FiMinus, FiPlus, FiShoppingBag, FiXCircle } from "react-icons/fi";
+import { Link } from "react-router-dom";
+import { toast } from "sonner";
 import useAddToCart from "./hooks/useAddToCart";
-import useCartData from "./hooks/useCartdata";
-import useValidateCoupon from "./hooks/useValidateCoupon";
 import useRemoveItem from "./hooks/useRemoveItem";
+import useValidateCoupon from "./hooks/useValidateCoupon";
+import useCartData from "./hooks/useCartData";
 
 const stripePromise = loadStripe(
     "pk_test_51QL8tPE2SYKPhJCMl6nuNHAfpEvwZs3fnJXH0FxDwdp41tsoBMPf0aUM8UIflYhSSlX3ZoKJ4NnSPvpJg3wCvHIZ00TemcIYIK"
@@ -18,6 +18,7 @@ export default function CartPage() {
     const queryClient = useQueryClient();
     const [couponCode, setCouponCode] = useState("");
     const [discount, setDiscount] = useState(0);
+    const [isProcessing, setIsProcessing] = useState(false);
 
     // Fetch cart data
     const {data: cart, isLoading, isError} = useCartData();
@@ -49,16 +50,22 @@ export default function CartPage() {
 
     // Payment handler: redirect to Stripe Checkout using the updated total
     const handlePayment = async () => {
-        const stripe = await stripePromise;
-        // Pass the updated total (subtotal - discount) and couponCode to the backend
-        const res = await axiosInstance.post("/payments/create-checkout-session", {
-            total: Number(cart?.totalPrice || 0) - discount,
-            couponCode,
-        });
-        const session = res.data;
-        const result = await stripe.redirectToCheckout({sessionId: session.id});
-        if (result.error) {
-            console.error("Error:", result.error);
+        setIsProcessing(true);
+        try {
+            const stripe = await stripePromise;
+            const res = await axiosInstance.post("/payments/create-checkout-session", {
+                total: Number(cart?.totalPrice || 0) - discount,
+                couponCode,
+            });
+            const session = res.data;
+            const result = await stripe.redirectToCheckout({sessionId: session.id});
+            if (result.error) {
+                toast.error("Payment failed: " + result.error.message);
+            }
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Payment processing failed");
+        } finally {
+            setIsProcessing(false);
         }
     };
 
@@ -244,13 +251,42 @@ export default function CartPage() {
                                     )}
                                 </div>
 
-                                {/* Checkout Button */}
+                                {/* Checkout Button with Loading State */}
                                 <button
                                     onClick={handlePayment}
-                                    className="w-full bg-black text-white py-3 rounded-lg mt-4 hover:bg-gray-800 transition-colors flex items-center justify-center gap-2"
+                                    disabled={isProcessing}
+                                    className="w-full bg-black text-white py-3 rounded-lg mt-4 hover:bg-gray-800 transition-colors flex items-center justify-center gap-2 disabled:opacity-75 disabled:cursor-not-allowed"
                                 >
-                                    Proceed to Checkout
-                                    <FiShoppingBag />
+                                    {isProcessing ? (
+                                        <>
+                                            <svg
+                                                className="animate-spin h-5 w-5 text-white"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <circle
+                                                    className="opacity-25"
+                                                    cx="12"
+                                                    cy="12"
+                                                    r="10"
+                                                    stroke="currentColor"
+                                                    strokeWidth="4"
+                                                ></circle>
+                                                <path
+                                                    className="opacity-75"
+                                                    fill="currentColor"
+                                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                                ></path>
+                                            </svg>
+                                            Processing...
+                                        </>
+                                    ) : (
+                                        <>
+                                            Proceed to Checkout
+                                            <FiShoppingBag />
+                                        </>
+                                    )}
                                 </button>
 
                                 <Link to="/shop">

@@ -1,4 +1,4 @@
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import {BrowserRouter, Navigate, Route, Routes} from "react-router-dom";
 import Footer from "./components/Footer/Footer";
 import Header from "./components/Header/Header";
 import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
@@ -9,7 +9,6 @@ import ResetPasswordVerify from "./pages/auth/ResetPasswordVerify";
 import VerifyEmail from "./pages/auth/VerifyEmail";
 import Home from "./pages/home/home";
 import CartPage from "./pages/payment/CartPage";
-// import CheckOutPage from "./pages/payment/CheckOutPage";
 import OrderSuccessPage from "./pages/payment/OrderSuccessPage";
 import SellerUpgradeSuccessPage from "./pages/payment/SellerUpgradeSuccessPage";
 import ProductDetails from "./pages/productdetails/ProductDetails";
@@ -40,7 +39,7 @@ function App() {
                     path="/profile/:id"
                     element={user ? <Profile /> : <Navigate to="/login" />}
                 />
-                
+
                 <Route path="/cart" element={user ? <CartPage /> : <Navigate to="/login" />} />
                 <Route
                     path="/order-success"

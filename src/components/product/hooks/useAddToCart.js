@@ -19,6 +19,7 @@ const useAddToCart = (productId, quantity) => {
             queryClient.invalidateQueries({queryKey: ["cart"]});
         },
         onError: (error) => {
+            console.log(error);
             toast.error(error.response?.data?.message || "Failed to add to cart");
         },
     });

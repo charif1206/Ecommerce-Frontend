@@ -1,17 +1,20 @@
-import loginIllustration from "@/assets/Devices-bro.png";
+import {useState} from "react";
+import {Eye, EyeOff} from "lucide-react";
 import {zodResolver} from "@hookform/resolvers/zod";
 import {useForm} from "react-hook-form";
 import {FcGoogle} from "react-icons/fc";
 import {Link, useNavigate} from "react-router-dom";
 import {z} from "zod";
-
+import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui/form";
+import {Input} from "@/components/ui/input";
+import {Button} from "@/components/ui/button";
 import axiosInstance from "@/Axios/AxiosInstance";
 import useAuthStore from "@/zustand/authStore";
 import {useMutation} from "@tanstack/react-query";
 import {toast} from "sonner";
 import useCartStore from "@/zustand/cartStore";
+import loginIllustration from "@/assets/Devices-bro.png";
 
-// Zod validation schema for the form
 const loginSchema = z.object({
     email: z.string().email("Invalid email address").nonempty("Email is required"),
     password: z
@@ -21,59 +24,41 @@ const loginSchema = z.object({
 });
 
 export default function Login() {
+    const [showPassword, setShowPassword] = useState(false);
     const setCartItems = useCartStore((state) => state.setCartItems);
     const setUser = useAuthStore((state) => state.setUser);
     const setTotalPrice = useCartStore((state) => state.setTotalPrice);
     const navigate = useNavigate();
 
-    const {
-        register,
-        handleSubmit,
-        formState: {errors},
-    } = useForm({
-        resolver: zodResolver(loginSchema), // Zod validation for form
+    const form = useForm({
+        resolver: zodResolver(loginSchema),
+        defaultValues: {
+            email: "",
+            password: "",
+        },
     });
 
-    // React Query hook for login mutation
-    const {mutate: login, isLoading} = useMutation({
+    const {mutate: login, isPending} = useMutation({
         mutationFn: async (data) => {
             const response = await axiosInstance.post("/auth/login", data);
             return response.data;
         },
         onSuccess: async (data) => {
-            // If the user is successfully logged in and verified
-            if (data) {
-                // Show success toast with user object, e.g. "Login successful"
-                toast.success("Login successful!");
-
-                // Store user data in Zustand and localStorage
-                setUser(data);
-                localStorage.setItem("userInfo", JSON.stringify(data));
-
-                const response = await axiosInstance.get("/cart");
-                localStorage.setItem("cartItems", JSON.stringify(response.data.items));
-                setCartItems(response.data.items);
-                setTotalPrice(response.data.totalPrice);
-                // Redirect to home
-                navigate("/");
-            }
+            setUser(data);
+            localStorage.setItem("userInfo", JSON.stringify(data));
+            const response = await axiosInstance.get("/cart");
+            localStorage.setItem("cartItems", JSON.stringify(response.data.items));
+            setCartItems(response.data.items);
+            setTotalPrice(response.data.totalPrice);
+            navigate("/");
         },
         onError: (error) => {
-            // Check if error response contains message from backend
-            const errorMessage =
-                error.response?.data?.message || error.message || "Login failed. Please try again.";
-
-            // If the message is about verification link being sent
-            if (
-                error.response?.status === 400 &&
-                error.response?.data?.message === "we sent a verification link to your email"
-            ) {
-                toast.info(error.response.data.message); // Info toast for email verification message
+            const errorMessage = error.response?.data?.message || "Login failed. Please try again.";
+            if (error.response?.status === 400 && errorMessage.includes("verification")) {
+                toast.info(errorMessage);
             } else {
-                toast.error(errorMessage); // Error toast for invalid credentials or other errors
+                toast.error(errorMessage);
             }
-
-            console.error("Error during login:", errorMessage);
         },
     });
 
@@ -96,102 +81,145 @@ export default function Login() {
 
             {/* Right Side - Login Form */}
             <div className="w-full lg:w-1/2 bg-slate-100 p-8 sm:p-12 flex items-center justify-center">
-                <div className="w-full max-w-[440px] space-y-8">
+                <div className="w-full max-w-sm space-y-8">
                     {/* Logo */}
-                    <div className="text-center lg:text-left">
+                    <div className="text-center">
                         <h1 className="text-3xl font-bold">
-                            <span className="text-2xl font-extrabold text-gray-900 tracking-wide">
-                                Das
-                                <span className="text-2xl font-light text-gray-500 tracking-wide">
-                                    Tech
-                                    <span className="text-3xl font-black text-yellow-500">.</span>
-                                </span>
-                            </span>
+                            <span className="text-gray-900">Das</span>
+                            <span className="text-gray-500">Tech</span>
+                            <span className="text-yellow-500">.</span>
                         </h1>
                     </div>
 
-                    {/* Form */}
-                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                        {/* Email */}
-                        <div className="space-y-2">
-                            <label htmlFor="email" className="block text-gray-700">
-                                Email
-                            </label>
-                            <input
-                                id="email"
-                                type="email"
-                                className="w-full px-4 py-3 rounded-lg border border-gray-300 shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="Enter your email"
-                                {...register("email")} // Registering email field
+                    <Form {...form}>
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                            {/* Email Field */}
+                            <FormField
+                                control={form.control}
+                                name="email"
+                                render={({field}) => (
+                                    <FormItem className="space-y-2">
+                                        <FormLabel className="block text-gray-700">Email</FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                className="w-full px-4 py-4 rounded-lg border shadow-inner border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white placeholder-gray-400"
+                                                placeholder="Enter your email"
+                                                {...field}
+                                            />
+                                        </FormControl>
+                                        <FormMessage className="text-red-500 text-sm" />
+                                    </FormItem>
+                                )}
                             />
-                            {errors.email && (
-                                <p className="text-red-500 text-sm">{errors.email.message}</p>
-                            )}{" "}
-                            {/* Error message */}
-                        </div>
 
-                        {/* Password */}
-                        <div className="space-y-2">
-                            <label htmlFor="password" className="block text-gray-700">
-                                Password
-                            </label>
-                            <input
-                                id="password"
-                                type="password"
-                                className="w-full px-4 py-3 rounded-lg border shadow-inner border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="Enter your password"
-                                {...register("password")} // Registering password field
+                            {/* Password Field */}
+                            <FormField
+                                control={form.control}
+                                name="password"
+                                render={({field}) => (
+                                    <FormItem className="space-y-2">
+                                        <div className="flex justify-between items-center">
+                                            <FormLabel className="block text-gray-700">
+                                                Password
+                                            </FormLabel>
+                                            <Link
+                                                to="/forgot-password"
+                                                className="text-sm text-gray-600 hover:text-blue-600"
+                                            >
+                                                Forgot Password?
+                                            </Link>
+                                        </div>
+                                        <div className="relative">
+                                            <FormControl>
+                                                <Input
+                                                    type={showPassword ? "text" : "password"}
+                                                    className="w-full px-4 py-4 rounded-lg border shadow-inner border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white placeholder-gray-400"
+                                                    placeholder="Enter your password"
+                                                    {...field}
+                                                />
+                                            </FormControl>
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="icon"
+                                                className="absolute right-2 top-2 h-6 w-6"
+                                                onClick={() => setShowPassword(!showPassword)}
+                                            >
+                                                {showPassword ? (
+                                                    <EyeOff className="h-4 w-4" />
+                                                ) : (
+                                                    <Eye className="h-4 w-4" />
+                                                )}
+                                            </Button>
+                                        </div>
+                                        <FormMessage className="text-red-500 text-sm" />
+                                    </FormItem>
+                                )}
                             />
-                            {errors.password && (
-                                <p className="text-red-500 text-sm">{errors.password.message}</p>
-                            )}{" "}
-                            {/* Error message */}
-                            <div className="text-right">
-                                <Link
-                                    to="/forgot-password"
-                                    className="text-sm text-gray-600 hover:text-blue-600"
-                                >
-                                    Forgot Password?
+
+                            {/* Sign In Button with Loading Animation */}
+                            <Button
+                                type="submit"
+                                className="w-full bg-gray-900 text-white py-3 rounded-lg hover:bg-gray-800 transition-colors flex items-center justify-center gap-2"
+                                disabled={isPending}
+                            >
+                                {isPending ? (
+                                    <>
+                                        <svg
+                                            className="animate-spin h-5 w-5 text-white"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <circle
+                                                className="opacity-25"
+                                                cx="12"
+                                                cy="12"
+                                                r="10"
+                                                stroke="currentColor"
+                                                strokeWidth="4"
+                                            ></circle>
+                                            <path
+                                                className="opacity-75"
+                                                fill="currentColor"
+                                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                            ></path>
+                                        </svg>
+                                        Signing In...
+                                    </>
+                                ) : (
+                                    "Sign In"
+                                )}
+                            </Button>
+
+                            {/* Divider */}
+                            <div className="relative">
+                                <div className="absolute inset-0 flex items-center">
+                                    <div className="w-full border-t border-gray-300"></div>
+                                </div>
+                                <div className="relative flex justify-center text-sm">
+                                    <span className="px-4 bg-white text-gray-500">Or</span>
+                                </div>
+                            </div>
+
+                            {/* Google Sign In */}
+                            <Button
+                                variant="outline"
+                                className="w-full flex items-center justify-center gap-3 shadow-inner border border-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-50 transition-colors"
+                            >
+                                <FcGoogle size={25} />
+                                Continue With Google
+                            </Button>
+
+                            {/* Sign Up Link */}
+                            <div className="text-center text-gray-600">
+                                Are You New?{" "}
+                                <Link to="/register" className="text-gray-900 hover:underline">
+                                    Create An Account
                                 </Link>
                             </div>
-                        </div>
-
-                        {/* Sign In Button */}
-                        <button
-                            type="submit"
-                            className="w-full bg-gray-900 text-white py-3 rounded-lg hover:bg-gray-800 transition-colors"
-                            disabled={isLoading} // Disable when loading
-                        >
-                            {isLoading ? "Signing In..." : "Sign In"}
-                        </button>
-
-                        {/* Divider */}
-                        <div className="relative">
-                            <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t border-gray-300"></div>
-                            </div>
-                            <div className="relative flex justify-center text-sm">
-                                <span className="px-4 bg-white text-gray-500">Or</span>
-                            </div>
-                        </div>
-
-                        {/* Google Sign In */}
-                        <button
-                            type="button"
-                            className="w-full flex items-center justify-center gap-3 shadow-inner bg-white border border-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-50 transition-colors"
-                        >
-                            <FcGoogle size={25} />
-                            Continue With Google
-                        </button>
-
-                        {/* Sign Up Link */}
-                        <div className="text-center text-gray-600">
-                            Are You New?{" "}
-                            <Link to="/register" className="text-gray-900 hover:underline">
-                                Create An Account
-                            </Link>
-                        </div>
-                    </form>
+                        </form>
+                    </Form>
                 </div>
             </div>
         </div>

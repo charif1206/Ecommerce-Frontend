@@ -1,10 +1,20 @@
 import axiosInstance from "@/Axios/AxiosInstance";
+import { Button } from "@/components/ui/button";
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle
+} from "@/components/ui/dialog";
 import useAuthStore from "@/zustand/authStore";
-import {useInfiniteQuery, useMutation, useQueryClient} from "@tanstack/react-query";
-import {useState} from "react";
-import {useParams} from "react-router-dom";
-import {toast} from "sonner";
-import {Trash, Edit, Save, X} from "lucide-react";
+import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Edit, Save, Trash, X } from "lucide-react";
+import { useState } from "react";
+import { useParams } from "react-router-dom";
+import { toast } from "sonner";
 
 const REVIEWS_PER_PAGE = 5;
 
@@ -18,6 +28,8 @@ export default function ProductReviews() {
     const [editingReviewId, setEditingReviewId] = useState(null);
     const [editRating, setEditRating] = useState(0);
     const [editComment, setEditComment] = useState("");
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [reviewIdToDelete, setReviewIdToDelete] = useState(null);
 
     const {
         data: reviewData,
@@ -70,6 +82,10 @@ export default function ProductReviews() {
         onError: (error) => {
             toast.error(error.response?.data?.message || "Failed to delete review");
         },
+        onSettled: () => {
+            setDeleteDialogOpen(false);
+            setReviewIdToDelete(null);
+        },
     });
 
     const updateReviewMutation = useMutation({
@@ -103,10 +119,9 @@ export default function ProductReviews() {
         postReviewMutation.mutate(newReview);
     };
 
-    const handleDeleteReview = (reviewId) => {
-        if (window.confirm("Are you sure you want to delete this review?")) {
-            deleteReviewMutation.mutate(reviewId);
-        }
+    const handleDeleteConfirmation = (reviewId) => {
+        setReviewIdToDelete(reviewId);
+        setDeleteDialogOpen(true);
     };
 
     const handleEditReview = (review) => {
@@ -151,9 +166,34 @@ export default function ProductReviews() {
 
     return (
         <div className="space-y-6">
+            {/* Delete Confirmation Dialog */}
+            <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Delete Review</DialogTitle>
+                        <DialogDescription>
+                            Are you sure you want to delete this review? This action cannot be
+                            undone.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <DialogClose asChild>
+                            <Button variant="outline">Cancel</Button>
+                        </DialogClose>
+                        <Button
+                            variant="destructive"
+                            onClick={() => deleteReviewMutation.mutate(reviewIdToDelete)}
+                            disabled={deleteReviewMutation.isLoading}
+                        >
+                            {deleteReviewMutation.isLoading ? "Deleting..." : "Delete"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Review Form and List */}
             <form onSubmit={handleSubmitReview} className="bg-gray-50 p-6 rounded-lg mb-8">
                 <h3 className="text-lg font-semibold mb-4">Write a Review</h3>
-
                 <div className="mb-4">
                     <label className="block text-sm font-medium mb-2">Rating</label>
                     <div className="flex gap-2">
@@ -171,7 +211,6 @@ export default function ProductReviews() {
                         ))}
                     </div>
                 </div>
-
                 <div className="mb-4">
                     <label className="block text-sm font-medium mb-2">Your Review</label>
                     <textarea
@@ -182,13 +221,9 @@ export default function ProductReviews() {
                         required
                     />
                 </div>
-
-                <button
-                    type="submit"
-                    className="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800"
-                >
+                <Button type="submit" className="bg-black hover:bg-gray-800">
                     Submit Review
-                </button>
+                </Button>
             </form>
 
             <div className="space-y-4">
@@ -206,7 +241,7 @@ export default function ProductReviews() {
                                             <Edit className="w-5 h-5" />
                                         </button>
                                         <button
-                                            onClick={() => handleDeleteReview(review._id)}
+                                            onClick={() => handleDeleteConfirmation(review._id)}
                                             className="text-gray-400 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50"
                                             title="Delete review"
                                         >
@@ -300,13 +335,9 @@ export default function ProductReviews() {
 
             {hasNextPage && (
                 <div className="flex justify-center">
-                    <button
-                        onClick={handleLoadMore}
-                        disabled={isFetchingNextPage}
-                        className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
+                    <Button onClick={handleLoadMore} disabled={isFetchingNextPage} className="mt-4">
                         {isFetchingNextPage ? "Loading more reviews..." : "Load More"}
-                    </button>
+                    </Button>
                 </div>
             )}
 

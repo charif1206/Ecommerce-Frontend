@@ -5,6 +5,7 @@ import {ImSpinner8} from "react-icons/im";
 import {useQuery} from "@tanstack/react-query";
 import axiosInstance from "@/Axios/AxiosInstance";
 import useProductStore from "@/zustand/ProductsStore";
+import {Input} from "@/components/ui/input";
 
 const fetchProducts = async (searchQuery) => {
     const {data} = await axiosInstance.get("/products", {
@@ -22,6 +23,7 @@ export default function NavBar({onLinkClick}) {
 
     const [isResultsOpen, setIsResultsOpen] = useState(false);
 
+    // React Query for fetching products
     const {
         data: products,
         isFetching,
@@ -32,12 +34,14 @@ export default function NavBar({onLinkClick}) {
         enabled: searchQuery.length > 0,
     });
 
+    // Update products in store when query results change
     useEffect(() => {
         if (products && Array.isArray(products.products)) {
             setSearchProducts(products.products);
         }
     }, [products, setSearchProducts]);
 
+    // Handle clicks outside the search component
     useEffect(() => {
         const handleClickOutside = (e) => {
             if (!e.target.closest(".search-container")) {
@@ -48,36 +52,42 @@ export default function NavBar({onLinkClick}) {
         return () => document.removeEventListener("click", handleClickOutside);
     }, []);
 
+    // Handle input change
+    const handleInputChange = (e) => {
+        setSearchQueryValue(e.target.value);
+        setIsResultsOpen(true);
+        if (e.target.value.trim()) {
+            navigate("/shop");
+        }
+    };
+
+    // Handle product selection
     const handleProductSelect = (productName) => {
         setSearchQueryValue(productName);
         setIsResultsOpen(false);
-        if (onLinkClick) onLinkClick(); // close mobile menu if provided
+        if (onLinkClick) onLinkClick();
     };
 
     return (
         <div className="relative search-container w-full">
             <div className="relative">
-                <input
+                <Input
                     type="search"
                     placeholder="Search products..."
-                    className="w-full px-4 py-4 pl-12 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-lg h-14"
+                    className="pl-12 h-14 text-lg"
                     value={searchQuery}
-                    onChange={(e) => {
-                        setSearchQueryValue(e.target.value);
-                        setIsResultsOpen(true);
-                        navigate("/shop"); // redirect to shop page on type
-                    }}
+                    onChange={handleInputChange}
                     onFocus={() => setIsResultsOpen(true)}
                     aria-label="Search products"
                 />
                 <CiSearch
                     className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-                    size={28}
+                    size={24}
                 />
                 {isFetching && (
                     <ImSpinner8
                         className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 animate-spin"
-                        size={28}
+                        size={24}
                     />
                 )}
             </div>

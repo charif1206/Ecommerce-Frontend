@@ -42,18 +42,6 @@ export default function Profile() {
     // State to control the deletion alert dialog
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-    // const {mutate: handleLogout, isLoading} = useMutation({
-    //     mutationFn: async () => {
-    //         await axiosInstance.post("/auth/logout");
-    //     },
-    //     onSuccess: () => {
-    //         logout();
-    //     },
-    //     onError: (error) => {
-    //         console.error("Logout failed:", error.response?.data || error.message);
-    //     },
-    // });
-
     // Mutation to handle account deletion
     const {mutate: handleDeleteAccount, isLoading: isDeleting} = useMutation({
         mutationFn: async () => {
