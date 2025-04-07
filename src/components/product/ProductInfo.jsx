@@ -18,7 +18,7 @@ export default function ProductInfo({product, quantity, setQuantity, isPending})
     );
 
     // Mutation to add product to cart
-    const addToCartMutation = useAddToCart(product._id, quantity);
+    const addToCartMutation = useAddToCart(product._id);
     const likeMutation = useToggleLike(product._id, setLikeCount, setIsLiked);
     const favoriteMutation = useToggleFavorite(product._id, setIsFavorited);
 
@@ -65,7 +65,9 @@ export default function ProductInfo({product, quantity, setQuantity, isPending})
             toast.dismiss();
             return toast.error("Please login to add items to cart");
         }
-        addToCartMutation.mutate();
+        // Pass quantity as part of the mutation variables
+        addToCartMutation.mutate({quantity});
+        setQuantity(1);
     };
 
     const isOutOfStock = product.stock < 1;

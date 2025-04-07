@@ -11,7 +11,7 @@ import Home from "./pages/home/home";
 import CartPage from "./pages/payment/CartPage";
 import OrderSuccessPage from "./pages/payment/OrderSuccessPage";
 import SellerUpgradeSuccessPage from "./pages/payment/SellerUpgradeSuccessPage";
-import ProductDetails from "./pages/productdetails/ProductDetails";
+import ProductDetails from "./pages/productdetails/ProductDetailsPage";
 import Profile from "./pages/Profile/Profile";
 import Shop from "./pages/shop/Shop";
 import useAuthStore from "./zustand/authStore";

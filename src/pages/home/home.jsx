@@ -16,15 +16,10 @@ export default function Home() {
         placeholderData: keepPreviousData,
     });
 
-    // Destructure API response with default values
-    // const {products = [], totalPages = 0} = data || {};
-
     const topRatedProducts = [...(data?.products || [])] // Clone array to avoid mutating original data
         .filter((p) => p.ratings?.average !== undefined) // Ensure rating exists
         .sort((a, b) => b.ratings.average - a.ratings.average) // Sort descending
         .slice(0, 8); // Get top 8 highest-rated products
-
-    console.log(topRatedProducts);
 
     return (
         <div className="min-h-screen bg-[#F3F4F6]">
