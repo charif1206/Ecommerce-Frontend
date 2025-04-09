@@ -1,45 +1,23 @@
 // ManageOrders.jsx
-import axiosInstance from "@/Axios/AxiosInstance";
 import OrderDetailsModal from "@/components/manageOrder/OrderDetailsModal";
 import OrderFilters from "@/components/manageOrder/OrderFilters";
 import OrderTable from "@/components/manageOrder/OrderTable";
 import useAuthStore from "@/zustand/authStore";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
-
+import {useQueryClient} from "@tanstack/react-query";
+import {useState} from "react";
+import useProfileOrders from "./hooks/useProfileOrders";
+import useUpdateOrderStatus from "./hooks/useUpdateOrderStatus";
 
 export default function ManageOrders() {
     const user = useAuthStore((state) => state.user);
-    const queryClient = useQueryClient();
 
     const [filter, setFilter] = useState("all");
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState(null);
 
-    const {
-        data: ordersData,
-        isLoading,
-        error,
-    } = useQuery({
-        queryKey: ["orders", user?._id],
-        queryFn: async () => {
-            const endpoint =
-                user.roles === "seller" || user.roles === "admin"
-                    ? "/orders/seller"
-                    : "/orders/customer";
-            const response = await axiosInstance.get(endpoint);
-            return response.data.orders;
-        },
-        enabled: !!user,
-    });
+    const {data: ordersData, isLoading, error} = useProfileOrders(user);
 
-    const updateOrderStatusMutation = useMutation({
-        mutationFn: async ({orderId, status}) => {
-            const response = await axiosInstance.patch(`/orders/${orderId}/status`, {status});
-            return response.data.order;
-        },
-        onSuccess: () => queryClient.invalidateQueries(["orders", user?._id]),
-    });
+    const updateOrderStatusMutation = useUpdateOrderStatus(user);
 
     if (isLoading) return <div>Loading orders...</div>;
     if (error) return <div>Error loading orders.</div>;

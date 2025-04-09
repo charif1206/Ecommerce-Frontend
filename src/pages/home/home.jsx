@@ -1,20 +1,10 @@
-import axiosInstance from "@/Axios/AxiosInstance";
 import ProductCard from "@/components/ui/tailwind/ProductCard";
-import {keepPreviousData, useQuery} from "@tanstack/react-query";
 import {Link} from "react-router-dom";
+import useHomeProduct from "./useHomeProduct";
 
 export default function Home() {
     // Fetch products using React Query. Query key includes the page number.
-    const {data, isLoading, error} = useQuery({
-        queryKey: ["products", "home", {limit: "all"}],
-        queryFn: () =>
-            axiosInstance
-                .get("/products", {
-                    params: {limit: "all"},
-                })
-                .then((res) => res.data),
-        placeholderData: keepPreviousData,
-    });
+    const {data, isLoading, error} = useHomeProduct();
 
     const topRatedProducts = [...(data?.products || [])] // Clone array to avoid mutating original data
         .filter((p) => p.ratings?.average !== undefined) // Ensure rating exists

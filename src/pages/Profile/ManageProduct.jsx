@@ -1,11 +1,7 @@
-import axiosInstance from "@/Axios/AxiosInstance";
 import EditProductModal from "@/components/manageProduct/EditProductModal";
 import ProductForm from "@/components/manageProduct/ProductForm";
-import ProductTable from "@/components/manageProduct/ProductTable";
-import useAuthStore from "@/zustand/authStore";
-import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
-import {useEffect, useState} from "react";
 import {formSchema} from "@/components/manageProduct/productSchema";
+import ProductTable from "@/components/manageProduct/ProductTable";
 import {Button} from "@/components/ui/button";
 import {
     Dialog,
@@ -14,58 +10,32 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
-import {useForm} from "react-hook-form";
+import useAuthStore from "@/zustand/authStore";
 import {zodResolver} from "@hookform/resolvers/zod";
+import {useEffect, useState} from "react";
+import {useForm} from "react-hook-form";
 import {toast} from "sonner";
+import {useCreateProduct} from "./hooks/useCreateProduct";
+import {useDeleteProduct} from "./hooks/useDeleteProduct";
+import useProfileProducts from "./hooks/useProfileProduct";
+import {useUpdateProduct} from "./hooks/useUpdateProduct";
 
 export default function ManageProduct() {
     const user = useAuthStore((state) => state.user);
-    const queryClient = useQueryClient();
+    // States for editing and creating products
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [productToEdit, setProductToEdit] = useState(null);
+    const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
     // Fetch products
-    const {
-        data: products,
-        isLoading,
-        error,
-    } = useQuery({
-        queryKey: ["sellerProducts", user._id],
-        queryFn: async () => {
-            const response = await axiosInstance.get(`/products/seller/${user._id}`);
-            return response.data.products;
-        },
-        enabled: !!user,
-    });
+    const {data: products, isLoading, error} = useProfileProducts(user);
 
     // Mutations
-    const deleteProductMutation = useMutation({
-        mutationFn: async (productId) => {
-            const response = await axiosInstance.delete(`/products/${productId}`);
-            return response.data;
-        },
-        onSuccess: () => queryClient.invalidateQueries(["sellerProducts", user._id]),
-        onError: (error) => console.error("Error deleting product:", error),
-    });
+    const deleteProductMutation = useDeleteProduct(user._id);
 
-    const updateProductMutation = useMutation({
-        mutationFn: async ({productId, data}) => {
-            const response = await axiosInstance.patch(`/products/${productId}`, data);
-            return response.data;
-        },
-        onSuccess: () => queryClient.invalidateQueries(["sellerProducts", user._id]),
-    });
+    const updateProductMutation = useUpdateProduct(user._id);
 
-    const createProductMutation = useMutation({
-        mutationFn: async (formData) => {
-            const response = await axiosInstance.post("/products", formData, {
-                headers: {"Content-Type": "multipart/form-data"},
-            });
-            return response.data;
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries(["sellerProducts", user._id]);
-            setIsCreateDialogOpen(false);
-        },
-    });
+    const createProductMutation = useCreateProduct(user._id, setIsCreateDialogOpen);
 
     // React Hook Form setup
     const form = useForm({
@@ -95,7 +65,7 @@ export default function ManageProduct() {
         formData.append("category", data.category);
         formData.append("price", data.price);
         formData.append("stock", data.stock);
-        formData.append("variants", JSON.stringify(data.variants));
+        formData.append("variants", JSON.stringify(data.variants || {}));
 
         if (data.productImages && data.productImages.length > 0) {
             data.productImages.forEach((file) => {
@@ -103,19 +73,31 @@ export default function ManageProduct() {
             });
         }
 
-        toast
-            .promise(createProductMutation.mutateAsync(formData), {
-                loading: "Creating product...",
-                success: "Product created successfully!",
-                error: "Failed to create product",
-            })
-            .then(() => form.reset());
-    };
+        // Create the mutation promise first
+        const mutationPromise = createProductMutation.mutateAsync(formData);
 
-    // States for editing and creating products
-    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-    const [productToEdit, setProductToEdit] = useState(null);
-    const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+        // Use toast.promise to show toast notifications for the promise states
+        toast.promise(mutationPromise, {
+            loading: "Creating product...",
+            success: "Product created successfully!",
+            error: (err) => {
+                console.error("Upload error details:", err);
+                return "Failed to create product";
+            },
+        });
+
+        try {
+            // Actually await the mutation result
+            await mutationPromise;
+
+            // Reset form and close dialog on success
+            form.reset();
+            setIsCreateDialogOpen(false);
+        } catch (error) {
+            // Error is already handled by toast.promise
+            console.error("Product creation error:", error);
+        }
+    };
 
     const handleEdit = (product) => {
         setProductToEdit(product);
