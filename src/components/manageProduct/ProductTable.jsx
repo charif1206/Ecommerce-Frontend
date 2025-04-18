@@ -1,5 +1,3 @@
-
-
 import {
     Table,
     TableBody,
@@ -73,10 +71,7 @@ export default function ProductTable({products, onEdit, onDelete}) {
                                     {product.stock}
                                 </Badge>
                             </TableCell>
-                            <TableCell
-                                className="px-6 py-4 max-w-xs truncate"
-                                title={formatSpecs(product)}
-                            >
+                            <TableCell className="px-6 py-4 max-w-xs truncate font-semibold">
                                 {formatSpecs(product)}
                             </TableCell>
                             <TableCell className="px-6 py-4">

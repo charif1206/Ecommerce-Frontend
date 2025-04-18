@@ -163,7 +163,7 @@ export default function Shop() {
     const [selectedCategories, setSelectedCategories] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [sortOrder, setSortOrder] = useState("asc");
-    const productsPerPage = 12;
+    const productsPerPage = 8;
     const setProducts = useProductStore((state) => state.setProducts);
     const products = useProductStore((state) => state.products);
     const searchQuery = useProductStore((state) => state.searchQuery);

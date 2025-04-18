@@ -1,3 +1,4 @@
+// Import necessary dependencies
 import axiosInstance from "@/Axios/AxiosInstance";
 import useAuthStore from "@/zustand/authStore";
 import useCartStore from "@/zustand/cartStore";
@@ -8,31 +9,36 @@ import Confetti from "react-confetti";
 import {Link, useSearchParams} from "react-router-dom";
 
 const OrderSuccessPage = () => {
-    const [clientError, setClientError] = useState(null);
-    const [mounted, setMounted] = useState(false);
-    const setUser = useAuthStore((state) => state.setUser);
+    // State management
+    const [clientError, setClientError] = useState(null); // Store client-side errors
+    const [mounted, setMounted] = useState(false); // Track if component is mounted
+
+    // Global state from Zustand stores
+    const setUser = useAuthStore((state) => state.setUser); // Function to update user state
+    const setCartItems = useCartStore((state) => state.setCartItems); // Function to update cart
+
+    // Get session ID from URL query parameters
     const [searchParams] = useSearchParams();
     const sessionId = searchParams.get("session_id");
-    const setCartItems = useCartStore((state) => state.setCartItems);
 
-    // Set mounted flag once the component has mounted
+    // Set mounted flag when component renders
     useEffect(() => {
         setMounted(true);
     }, []);
 
-    // Fetch order details (only if sessionId exists)
+    // Fetch order details from the API
     const {data: order, isLoading: orderLoading} = useQuery({
         queryKey: ["order", sessionId],
         queryFn: async () => {
             const response = await axiosInstance.get(`/orders/${sessionId}`);
             return response.data;
         },
-        enabled: !!sessionId,
+        enabled: !!sessionId, // Only run query if sessionId exists
     });
 
-    const orderId = order?._id || "N/A";
+    const orderId = order?._id || "N/A"; // Extract order ID or use placeholder
 
-    // Mutation to call the checkout-success endpoint
+    // Mutation to finalize the checkout process
     const {
         mutate,
         isLoading: mutationLoading,
@@ -41,12 +47,14 @@ const OrderSuccessPage = () => {
     } = useMutation({
         mutationFn: (sessionId) => axiosInstance.post("/payments/checkout-success", {sessionId}),
         onSuccess: async () => {
+            // Clear cart after successful checkout
             setCartItems([]);
             localStorage.removeItem("cartItems");
-            // Mark this session as processed so that it won't be re-processed on refresh
+
+            // Mark session as processed to prevent duplicate processing
             localStorage.setItem(`checkoutProcessed_${sessionId}`, "true");
 
-            // Refetch updated user data and update store & localStorage
+            // Fetch and update user data with new order information
             const storedUserInfo = JSON.parse(localStorage.getItem("userInfo"));
             const userId = storedUserInfo?._id;
             if (userId) {
@@ -62,11 +70,11 @@ const OrderSuccessPage = () => {
         },
     });
 
-    // Only run effect when component is mounted
+    // Process order when component mounts
     useEffect(() => {
         if (!mounted) return;
         if (sessionId) {
-            // Check if this session has already been processed
+            // Prevent duplicate processing by checking localStorage
             const processed = localStorage.getItem(`checkoutProcessed_${sessionId}`);
             if (!processed) {
                 mutate(sessionId);
@@ -76,6 +84,7 @@ const OrderSuccessPage = () => {
         }
     }, [mounted, sessionId, mutate]);
 
+    // Conditional rendering based on different states
     if (clientError) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center text-red-600 p-4 text-center">
@@ -102,8 +111,10 @@ const OrderSuccessPage = () => {
         );
     }
 
+    // Success page UI
     return (
         <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 relative overflow-hidden">
+            {/* Celebration confetti effect */}
             <Confetti
                 width={window.innerWidth}
                 height={window.innerHeight}
@@ -114,8 +125,10 @@ const OrderSuccessPage = () => {
                 className="!absolute"
             />
 
+            {/* Order confirmation card */}
             <div className="max-w-lg w-full bg-white rounded-2xl shadow-lg overflow-hidden relative z-10 border border-gray-200">
                 <div className="p-8 space-y-6">
+                    {/* Success header */}
                     <div className="flex flex-col items-center mb-6 space-y-4">
                         <div className="relative inline-flex">
                             <div className="absolute inset-0 rounded-full bg-green-100" />
@@ -133,6 +146,7 @@ const OrderSuccessPage = () => {
                         </p>
                     </div>
 
+                    {/* Order details section */}
                     <div className="bg-gray-50 rounded-xl p-5 space-y-4 border border-gray-200">
                         <div className="flex items-center space-x-3">
                             <WalletCards className="w-5 h-5 text-gray-800" />
@@ -161,6 +175,7 @@ const OrderSuccessPage = () => {
                         </div>
                     </div>
 
+                    {/* Action buttons */}
                     <div className="space-y-4">
                         <Link
                             to="/shop"

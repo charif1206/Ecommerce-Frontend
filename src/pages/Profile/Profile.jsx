@@ -1,11 +1,9 @@
-import axiosInstance from "@/Axios/AxiosInstance";
 import {Button} from "@/components/ui/button";
 import {ScrollArea} from "@/components/ui/scroll-area";
 import {Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger} from "@/components/ui/sheet";
 import {Skeleton} from "@/components/ui/skeleton";
 import {Tabs, TabsList, TabsTrigger} from "@/components/ui/tabs";
 import useAuthStore from "@/zustand/authStore";
-import {useMutation} from "@tanstack/react-query";
 import {useState} from "react";
 import {FaBars} from "react-icons/fa";
 import {useParams, useSearchParams} from "react-router-dom";
@@ -18,16 +16,6 @@ import ProfileLikes from "./ProfileLikes";
 import ProfileWishlist from "./ProfileWishlist";
 
 // Import AlertDialog components
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 
 export default function Profile() {
     const {id: userId} = useParams();
@@ -36,24 +24,24 @@ export default function Profile() {
     const defaultTab = searchParams.get("tab") || "profile";
     const [activeTab, setActiveTab] = useState(defaultTab);
     const user = useAuthStore((state) => state.user);
-    const logout = useAuthStore((state) => state.logout);
+    // const logout = useAuthStore((state) => state.logout);
 
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    // State to control the deletion alert dialog
-    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    // // State to control the deletion alert dialog
+    // const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-    // Mutation to handle account deletion
-    const {mutate: handleDeleteAccount, isLoading: isDeleting} = useMutation({
-        mutationFn: async () => {
-            await axiosInstance.delete(`/users/${userId}`);
-        },
-        onSuccess: () => {
-            logout();
-        },
-        onError: (error) => {
-            console.error("Delete account failed:", error.response?.data || error.message);
-        },
-    });
+    // // Mutation to handle account deletion
+    // const {mutate: handleDeleteAccount, isLoading: isDeleting} = useMutation({
+    //     mutationFn: async () => {
+    //         await axiosInstance.delete(`/users/${userId}`);
+    //     },
+    //     onSuccess: () => {
+    //         logout();
+    //     },
+    //     onError: (error) => {
+    //         console.error("Delete account failed:", error.response?.data || error.message);
+    //     },
+    // });
 
     // Main navigation items without Delete Account (it's now a separate button)
     const mainNavigationItems = [
@@ -126,7 +114,7 @@ export default function Profile() {
                                                 className="w-full"
                                                 onClick={() => {
                                                     setIsSidebarOpen(false);
-                                                    setDeleteDialogOpen(true);
+                                                    // setDeleteDialogOpen(true);
                                                 }}
                                             >
                                                 Delete Account
@@ -156,7 +144,7 @@ export default function Profile() {
                                 </TabsList>
                             </Tabs>
                         </ScrollArea>
-                        {user._id === userId && (
+                        {/* {user._id === userId && (
                             <div className="mt-4">
                                 <Button
                                     variant="destructive"
@@ -166,7 +154,7 @@ export default function Profile() {
                                     Delete Account
                                 </Button>
                             </div>
-                        )}
+                        )} */}
                     </div>
                 </div>
 
@@ -190,7 +178,7 @@ export default function Profile() {
             </div>
 
             {/* AlertDialog for Delete Account */}
-            <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+            {/* <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>Delete Account</AlertDialogTitle>
@@ -209,7 +197,7 @@ export default function Profile() {
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
-            </AlertDialog>
+            </AlertDialog> */}
         </div>
     );
 }

@@ -3,7 +3,6 @@ import OrderDetailsModal from "@/components/manageOrder/OrderDetailsModal";
 import OrderFilters from "@/components/manageOrder/OrderFilters";
 import OrderTable from "@/components/manageOrder/OrderTable";
 import useAuthStore from "@/zustand/authStore";
-import {useQueryClient} from "@tanstack/react-query";
 import {useState} from "react";
 import useProfileOrders from "./hooks/useProfileOrders";
 import useUpdateOrderStatus from "./hooks/useUpdateOrderStatus";

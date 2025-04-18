@@ -1,3 +1,4 @@
+// Import necessary dependencies and components
 import axiosInstance from "@/Axios/AxiosInstance";
 import {Button} from "@/components/ui/button";
 import useAuthStore from "@/zustand/authStore";
@@ -9,17 +10,23 @@ import {Link, useSearchParams} from "react-router-dom";
 import {toast} from "sonner";
 
 export default function SellerUpgradeSuccessPage() {
+    // Get session ID from URL parameters
     const [searchParams] = useSearchParams();
     const sessionId = searchParams.get("session_id");
+
+    // Access global authentication state
     const authUser = useAuthStore((state) => state.user);
     const setUser = useAuthStore((state) => state.setUser);
     const userId = authUser?._id;
 
+    // Mutation to confirm seller upgrade payment
     const {mutate, isPending, isError, error} = useMutation({
         mutationFn: (id) => axiosInstance.post("/payments/checkout-success", {sessionId: id}),
         onSuccess: async () => {
+            // After successful upgrade, fetch updated user data with seller role
             if (!userId) return;
             const {data: user} = await axiosInstance.get(`/users/${userId}`);
+            // Update local user state and storage
             setUser(user);
             localStorage.setItem("userInfo", JSON.stringify(user));
             toast.dismiss();
@@ -33,12 +40,14 @@ export default function SellerUpgradeSuccessPage() {
         },
     });
 
+    // Process payment on component mount if session ID exists
     useEffect(() => {
         if (sessionId && sessionId !== "") {
             mutate(sessionId);
         }
     }, [sessionId, mutate]);
 
+    // Show loading screen if session ID is still loading
     if (sessionId === null) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -51,6 +60,7 @@ export default function SellerUpgradeSuccessPage() {
         );
     }
 
+    // Show error if no session ID was found in URL
     if (sessionId === "") {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -67,11 +77,14 @@ export default function SellerUpgradeSuccessPage() {
         );
     }
 
+    // Show loading and error states during payment processing
     if (isPending) return <LoadingDisplay />;
     if (isError) return <ErrorDisplay message={error.message} />;
 
+    // Success page display
     return (
         <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 relative overflow-hidden">
+            {/* Celebration animation */}
             <Confetti
                 width={window.innerWidth}
                 height={window.innerHeight}
@@ -83,6 +96,7 @@ export default function SellerUpgradeSuccessPage() {
             />
             <div className="max-w-lg w-full bg-white rounded-2xl shadow-lg overflow-hidden relative z-10 border border-gray-200">
                 <div className="p-8 space-y-6">
+                    {/* Success header with icon */}
                     <div className="flex flex-col items-center mb-6 space-y-4">
                         <div className="relative inline-flex">
                             <div className="absolute inset-0 rounded-full bg-green-100" />
@@ -98,6 +112,8 @@ export default function SellerUpgradeSuccessPage() {
                             You now have access to exclusive seller features and your dashboard.
                         </p>
                     </div>
+
+                    {/* Feature list section */}
                     <div className="bg-gray-50 rounded-xl p-5 space-y-4 border border-gray-200">
                         <div className="flex items-center space-x-3">
                             <Store className="w-5 h-5 text-gray-800" />
@@ -112,6 +128,8 @@ export default function SellerUpgradeSuccessPage() {
                             <span className="text-gray-600">Priority Support Enabled</span>
                         </div>
                     </div>
+
+                    {/* Action button */}
                     <div className="space-y-4">
                         <Link
                             to={`/profile/${userId}`}
@@ -126,6 +144,7 @@ export default function SellerUpgradeSuccessPage() {
     );
 }
 
+// Loading component for processing state
 const LoadingDisplay = () => (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-gray-600 text-lg font-medium animate-pulse">
@@ -134,6 +153,7 @@ const LoadingDisplay = () => (
     </div>
 );
 
+// Error component for failed payments
 const ErrorDisplay = ({message}) => (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center text-red-600 p-4 text-center">
         Error: {message || "Failed to complete upgrade"}
