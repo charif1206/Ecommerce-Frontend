@@ -1,3 +1,4 @@
+// Product details component for displaying product specifications and variants
 export default function ProductDetails({product}) {
     return (
         <div className="space-y-6">

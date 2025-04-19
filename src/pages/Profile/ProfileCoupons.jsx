@@ -1,3 +1,4 @@
+// ProfileCoupons page allows users to redeem points for discount coupons and view their redeemed coupons
 import axiosInstance from "@/Axios/AxiosInstance";
 import {Badge} from "@/components/ui/badge";
 import {Button} from "@/components/ui/button";
@@ -26,6 +27,7 @@ const redeemableCoupons = [
     {id: "coupon50", amount: 50, color: "bg-purple-100"},
 ];
 
+// Minimum purchase required for each coupon value
 const minimumPurchaseMap = {
     5: 25,
     10: 50,
@@ -34,7 +36,9 @@ const minimumPurchaseMap = {
 };
 
 export default function ProfileCoupons() {
+    // Get userId from URL params
     const {id: userId} = useParams();
+    // Zustand store setters and user
     const setUser = useAuthStore((state) => state.setUser);
     const user = useAuthStore((state) => state.user);
 
@@ -56,8 +60,10 @@ export default function ProfileCoupons() {
         },
     });
 
+    // Helper to calculate points needed for coupon
     const getPointsNeeded = (amount) => amount * 100;
 
+    // Mutation to redeem a coupon
     const redeemCouponMutation = useMutation({
         mutationFn: async (amount) => {
             const response = await axiosInstance.post("/coupons/redeem", {value: amount});
@@ -81,21 +87,25 @@ export default function ProfileCoupons() {
         },
     });
 
+    // State for coupon dialog (show code after redeem)
     const [couponDialog, setCouponDialog] = useState({
         isOpen: false,
         code: "",
         value: 0,
     });
 
+    // State for confirmation dialog before redeeming
     const [confirmDialog, setConfirmDialog] = useState({
         isOpen: false,
         amount: 0,
     });
 
+    // Handler to redeem coupon
     const handleBuy = (amount) => {
         redeemCouponMutation.mutate(amount);
     };
 
+    // Handler to copy coupon code to clipboard
     const copyToClipboard = (text) => {
         navigator.clipboard.writeText(text);
         toast.success("Coupon code copied successfully");
@@ -111,6 +121,7 @@ export default function ProfileCoupons() {
                             Redeem your points for discount coupons
                         </p>
                     </header>
+                    {/* Dialog to show user's redeemed coupons */}
                     <Dialog>
                         <DialogTrigger asChild>
                             <Button>My Coupons ({userCoupons?.length || 0})</Button>
@@ -166,6 +177,7 @@ export default function ProfileCoupons() {
                     </Dialog>
                 </div>
 
+                {/* Coupon redemption cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {redeemableCoupons.map((coupon) => (
                         <Card

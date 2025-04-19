@@ -1,4 +1,5 @@
 // src/components/Shop.jsx
+// Shop page for displaying and filtering products with pagination
 import axiosInstance from "@/Axios/AxiosInstance";
 import Pagination from "@/components/ui/Pagination";
 import ProductCard from "@/components/ui/tailwind/ProductCard";
@@ -24,7 +25,7 @@ function MobileFilterToggle({isFilterOpen, setIsFilterOpen}) {
     );
 }
 
-// Filter Sidebar Component
+// Filter Sidebar Component for category and sort filters
 function FilterSidebar({
     isFilterOpen,
     selectedCategories,

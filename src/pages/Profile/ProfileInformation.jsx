@@ -1,3 +1,4 @@
+// ProfileInformation page displays user profile, allows editing phone, uploading profile picture, and upgrading to seller
 // Import UI components and icons
 import {Button} from "@/components/ui/button";
 import {Label} from "@/components/ui/label";
@@ -27,7 +28,7 @@ export default function ProfileInformation() {
     // Get user ID from URL parameters
     const {id: userId} = useParams();
 
-    // State for phone number management
+    // State for phone number management (edit dialog, phone value, error)
     const [phone, setPhone] = useState("");
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [phoneError, setPhoneError] = useState("");

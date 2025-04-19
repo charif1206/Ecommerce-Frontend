@@ -1,3 +1,4 @@
+// Product table component for displaying seller's products and actions
 import {
     Table,
     TableBody,

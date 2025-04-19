@@ -1,12 +1,20 @@
 // src/store/productStore.js
 import {create} from "zustand";
 
+// Store for managing product data and search functionality
 const useProductStore = create((set) => ({
+    // Array holding all available products
     products: [],
+    // Array holding products filtered by search
     searchProducts: [],
-    searchQuery: "", // Store search query
+    // Update the products array
+
     setProducts: (products) => set({products}),
-    setSearchQueryValue: (searchQuery) => set({searchQuery}), // Method to set search query
+    // Search query value
+    searchQuery: "",
+    // Update the search query value
+    setSearchQueryValue: (searchQuery) => set({searchQuery}),
+    // Update the filtered search products
     setSearchProducts: (searchProducts) => set({searchProducts}),
 }));
 

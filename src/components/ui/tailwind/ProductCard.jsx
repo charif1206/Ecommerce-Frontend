@@ -1,3 +1,4 @@
+// Product card component for displaying product info, likes, and favorites
 import {Card, CardContent, CardFooter} from "@/components/ui/card";
 import {Heart, Bookmark} from "lucide-react";
 import {Avatar, AvatarImage, AvatarFallback} from "@/components/ui/avatar";
@@ -7,7 +8,7 @@ import {Link} from "react-router-dom";
 import useAuthStore from "@/zustand/authStore";
 import {Rating} from "@smastrom/react-rating";
 import "@smastrom/react-rating/style.css";
-import {useMutation} from "@tanstack/react-query";
+import {useMutation, useQueryClient} from "@tanstack/react-query";
 import axiosInstance from "@/Axios/AxiosInstance";
 import {toast} from "sonner";
 
@@ -23,12 +24,14 @@ export default function ProductCard({
 }) {
     const authUser = useAuthStore((state) => state.user);
 
-    // Local state: initialize based on props & authUser
+    // Initialize local state based on props & authUser
     const [isLiked, setIsLiked] = useState(() => (authUser ? likes.includes(authUser._id) : false));
     const [likeCount, setLikeCount] = useState(likes.length);
     const [isFavorited, setIsFavorited] = useState(() =>
         authUser ? favorites.includes(authUser._id) : false
     );
+
+    const queryClient = useQueryClient();
 
     // Resync local state when authUser, likes, or favorites change
     useEffect(() => {
@@ -38,15 +41,19 @@ export default function ProductCard({
     }, [authUser, likes, favorites]);
 
     // Mutation to toggle the like state
+    // Mutation to update likes and sync with server/local state
     const toggleLikeMutation = useMutation({
         mutationFn: async () => {
             const response = await axiosInstance.put(`/products/like/${_id}`);
             return response.data;
         },
+        // Update local state and invalidate product query
         onSuccess: (data) => {
             setLikeCount(data.likes);
             setIsLiked((prev) => !prev);
+            queryClient.invalidateQueries({queryKey: ["product", _id]});
         },
+
         onError: (error) => {
             console.error("Error toggling like:", error);
         },
@@ -66,6 +73,7 @@ export default function ProductCard({
         },
     });
 
+    // Handle like toggle with authentication check
     const handleLikeToggle = () => {
         if (!authUser) {
             toast.dismiss();
@@ -75,6 +83,7 @@ export default function ProductCard({
         toggleLikeMutation.mutate();
     };
 
+    // Handle favorite toggle with authentication check
     const handleFavoriteToggle = () => {
         if (!authUser) {
             toast.dismiss();

@@ -70,6 +70,7 @@ export default function ProductInfo({product, quantity, setQuantity, isPending})
         setQuantity(1);
     };
 
+    // Conditional rendering for Add to Cart button
     const isOutOfStock = product.stock < 1;
     const exceedsStock = quantity > product.stock;
     const addButtonDisabled =

@@ -1,3 +1,4 @@
+// Profile page for managing user information, orders, products, coupons, wishlist, likes, and users (admin)
 import {Button} from "@/components/ui/button";
 import {ScrollArea} from "@/components/ui/scroll-area";
 import {Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger} from "@/components/ui/sheet";

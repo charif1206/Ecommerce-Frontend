@@ -1,9 +1,11 @@
+// ProfileLikes page displays all products liked by the user
 import {useQuery} from "@tanstack/react-query";
 import axiosInstance from "@/Axios/AxiosInstance";
 import ProductCard from "@/components/ui/tailwind/ProductCard";
 import {useParams} from "react-router-dom";
 
 export default function ProfileLikes() {
+    // Get userId from URL params
     const {id: userId} = useParams();
 
     // Fetch liked products when the component mounts
@@ -16,10 +18,12 @@ export default function ProfileLikes() {
         },
     });
 
+    // Loading state
     if (isLoading) {
         return <div className="p-8">Loading liked products...</div>;
     }
 
+    // Error state
     if (isError) {
         return (
             <div className="p-8 text-red-500">Error fetching liked products: {error.message}</div>
@@ -27,8 +31,8 @@ export default function ProfileLikes() {
     }
 
     console.log(data);
-    
 
+    // Render liked products or fallback if none
     return (
         <div className="p-8">
             <h1 className="text-2xl font-semibold mb-6">Liked Products</h1>

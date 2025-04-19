@@ -1,3 +1,4 @@
+// Login page for user authentication and handling login logic
 import {useState} from "react";
 import {Eye, EyeOff} from "lucide-react";
 import {zodResolver} from "@hookform/resolvers/zod";
@@ -15,6 +16,7 @@ import {toast} from "sonner";
 import useCartStore from "@/zustand/cartStore";
 import loginIllustration from "@/assets/Devices-bro.png";
 
+// Validation schema for login form
 const loginSchema = z.object({
     email: z.string().email("Invalid email address").nonempty("Email is required"),
     password: z
@@ -24,12 +26,15 @@ const loginSchema = z.object({
 });
 
 export default function Login() {
+    // State for toggling password visibility
     const [showPassword, setShowPassword] = useState(false);
+    // Zustand store actions for cart and user
     const setCartItems = useCartStore((state) => state.setCartItems);
     const setUser = useAuthStore((state) => state.setUser);
     const setTotalPrice = useCartStore((state) => state.setTotalPrice);
     const navigate = useNavigate();
 
+    // React Hook Form setup
     const form = useForm({
         resolver: zodResolver(loginSchema),
         defaultValues: {
@@ -38,6 +43,7 @@ export default function Login() {
         },
     });
 
+    // Mutation for login API call
     const {mutate: login, isPending} = useMutation({
         mutationFn: async (data) => {
             const response = await axiosInstance.post("/auth/login", data);
@@ -193,7 +199,7 @@ export default function Login() {
                             </Button>
 
                             {/* Divider */}
-                            <div className="relative">
+                            <div className="relative ">
                                 <div className="absolute inset-0 flex items-center">
                                     <div className="w-full border-t border-gray-300"></div>
                                 </div>

@@ -1,3 +1,4 @@
+// Home page component displaying hero banner and top-rated products
 import ProductCard from "@/components/ui/tailwind/ProductCard";
 import {Link} from "react-router-dom";
 import useHomeProduct from "./useHomeProduct";
@@ -6,6 +7,7 @@ export default function Home() {
     // Fetch products using React Query. Query key includes the page number.
     const {data, isLoading, error} = useHomeProduct();
 
+    // Select and sort top-rated products
     const topRatedProducts = [...(data?.products || [])] // Clone array to avoid mutating original data
         .filter((p) => p.ratings?.average !== undefined) // Ensure rating exists
         .sort((a, b) => b.ratings.average - a.ratings.average) // Sort descending
