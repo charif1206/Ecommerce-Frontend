@@ -1,20 +1,19 @@
 // Login page for user authentication and handling login logic
-import {useState} from "react";
-import {Eye, EyeOff} from "lucide-react";
-import {zodResolver} from "@hookform/resolvers/zod";
-import {useForm} from "react-hook-form";
-import {FcGoogle} from "react-icons/fc";
-import {Link, useNavigate} from "react-router-dom";
-import {z} from "zod";
+import loginIllustration from "@/assets/Devices-bro.png";
+import axiosInstance from "@/Axios/AxiosInstance";
+import {Button} from "@/components/ui/button";
 import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui/form";
 import {Input} from "@/components/ui/input";
-import {Button} from "@/components/ui/button";
-import axiosInstance from "@/Axios/AxiosInstance";
 import useAuthStore from "@/zustand/authStore";
-import {useMutation} from "@tanstack/react-query";
-import {toast} from "sonner";
 import useCartStore from "@/zustand/cartStore";
-import loginIllustration from "@/assets/Devices-bro.png";
+import {zodResolver} from "@hookform/resolvers/zod";
+import {useMutation} from "@tanstack/react-query";
+import {Eye, EyeOff} from "lucide-react";
+import {useState} from "react";
+import {useForm} from "react-hook-form";
+import {Link, useNavigate} from "react-router-dom";
+import {toast} from "sonner";
+import {z} from "zod";
 
 // Validation schema for login form
 const loginSchema = z.object({
@@ -196,25 +195,6 @@ export default function Login() {
                                 ) : (
                                     "Sign In"
                                 )}
-                            </Button>
-
-                            {/* Divider */}
-                            <div className="relative ">
-                                <div className="absolute inset-0 flex items-center">
-                                    <div className="w-full border-t border-gray-300"></div>
-                                </div>
-                                <div className="relative flex justify-center text-sm">
-                                    <span className="px-4 bg-white text-gray-500">Or</span>
-                                </div>
-                            </div>
-
-                            {/* Google Sign In */}
-                            <Button
-                                variant="outline"
-                                className="w-full flex items-center justify-center gap-3 shadow-inner border border-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-50 transition-colors"
-                            >
-                                <FcGoogle size={25} />
-                                Continue With Google
                             </Button>
 
                             {/* Sign Up Link */}

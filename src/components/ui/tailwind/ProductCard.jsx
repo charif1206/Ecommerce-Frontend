@@ -165,7 +165,7 @@ export default function ProductCard({
 
             {/* Seller Profile Footer */}
             <CardFooter className="border-t p-4">
-                <Link to={`/profile/${seller._id}`}>
+                <Link to={`/profile/${seller?._id}`}>
                     <div className="flex items-center gap-3 cursor-pointer">
                         <Avatar className="h-8 w-8">
                             <AvatarImage src={sellerImage} alt={sellerName} />

@@ -1,5 +1,5 @@
 import axiosInstance from "@/Axios/AxiosInstance";
-import { useQuery } from "@tanstack/react-query";
+import {useQuery} from "@tanstack/react-query";
 
 const useProfileOrders = (user) => {
     return useQuery({
@@ -9,6 +9,8 @@ const useProfileOrders = (user) => {
                 user.roles === "seller" || user.roles === "admin"
                     ? "/orders/seller"
                     : "/orders/customer";
+            console.log(endpoint);
+
             const response = await axiosInstance.get(endpoint);
             return response.data.orders;
         },

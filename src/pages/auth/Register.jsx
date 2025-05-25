@@ -8,7 +8,6 @@ import { useMutation } from "@tanstack/react-query";
 import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { FcGoogle } from "react-icons/fc";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -212,25 +211,6 @@ export default function Register() {
                                 ) : (
                                     "Sign Up"
                                 )}
-                            </Button>
-
-                            {/* Divider */}
-                            <div className="relative">
-                                <div className="absolute inset-0 flex items-center">
-                                    <div className="w-full border-t border-gray-300"></div>
-                                </div>
-                                <div className="relative flex justify-center text-sm">
-                                    <span className="px-4 bg-slate-100 text-gray-500">Or</span>
-                                </div>
-                            </div>
-
-                            {/* Google Sign Up */}
-                            <Button
-                                variant="outline"
-                                className="w-full shadow-inner hover:bg-gray-50"
-                            >
-                                <FcGoogle className="mr-2 h-5 w-5" />
-                                Continue With Google
                             </Button>
 
                             {/* Sign In Link */}

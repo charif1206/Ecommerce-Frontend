@@ -13,6 +13,9 @@ export default function Home() {
         .sort((a, b) => b.ratings.average - a.ratings.average) // Sort descending
         .slice(0, 8); // Get top 8 highest-rated products
 
+    console.log(topRatedProducts);
+    
+
     return (
         <div className="min-h-screen bg-[#F3F4F6]">
             {/* Hero Banner */}

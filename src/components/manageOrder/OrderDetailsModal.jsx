@@ -38,7 +38,9 @@ export default function OrderDetailsModal({order, onClose, onUpdateStatus, user}
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <p className="text-sm text-gray-600">Customer</p>
-                            <p className="font-medium">{order.userId}</p>
+                            <p className="font-medium">
+                                {order.userId?.username ?? order.userId?.email ?? "Unknown user"}
+                            </p>
                         </div>
                         <div>
                             <p className="text-sm text-gray-600">Date</p>
@@ -49,6 +51,7 @@ export default function OrderDetailsModal({order, onClose, onUpdateStatus, user}
                             </p>
                         </div>
                     </div>
+
                     {/* Coupon Details */}
                     {order.coupon && (
                         <div className="border-t pt-3 mt-2">
@@ -59,9 +62,10 @@ export default function OrderDetailsModal({order, onClose, onUpdateStatus, user}
                             </p>
                         </div>
                     )}
-                    {/* Status (only for seller or admin, if not the owner) */}
+
+                    {/* Status (only for seller or admin, if not the buyer) */}
                     {(user.roles === "seller" || user.roles === "admin") &&
-                        order.userId !== user._id && (
+                        order.userId?._id?.toString() !== user._id && (
                             <div>
                                 <p className="text-sm text-gray-600">Status</p>
                                 <Select
@@ -83,6 +87,7 @@ export default function OrderDetailsModal({order, onClose, onUpdateStatus, user}
                                 </Select>
                             </div>
                         )}
+
                     {/* Products List */}
                     <div className="mt-4">
                         <p className="text-sm text-gray-600 font-medium">Products</p>
@@ -92,11 +97,12 @@ export default function OrderDetailsModal({order, onClose, onUpdateStatus, user}
                                     const prod = item.productId;
                                     return (
                                         <div key={index} className="flex items-center space-x-4">
-                                            {prod &&
-                                            prod.productImages &&
-                                            prod.productImages.length > 0 ? (
+                                            {prod?.productImages?.length > 0 ? (
                                                 <img
-                                                    src={prod.productImages[0].url}
+                                                    src={
+                                                        prod.productImages[0]?.url ||
+                                                        prod.productImages[0]
+                                                    }
                                                     alt={prod.name}
                                                     className="w-12 h-12 object-contain rounded"
                                                 />
@@ -105,7 +111,7 @@ export default function OrderDetailsModal({order, onClose, onUpdateStatus, user}
                                             )}
                                             <div>
                                                 <p className="text-sm font-medium">
-                                                    {prod ? prod.name : "Unknown Product"}
+                                                    {prod?.name || "Unknown Product"}
                                                 </p>
                                                 <p className="text-xs text-gray-600">
                                                     Quantity: {item.quantity}
@@ -123,6 +129,7 @@ export default function OrderDetailsModal({order, onClose, onUpdateStatus, user}
                         </div>
                     </div>
                 </div>
+
                 <DialogFooter>
                     <button
                         onClick={onClose}
